@@ -1,6 +1,6 @@
 # Ola Dash
 
-The product built on the [Ola Dash SDK](https://github.com/abhi245y/ola-dash-sdk): an unofficial dash for the Ola S1 Pro Gen 1 electric scooter. This repo holds the theme pack, installer, recovery watchdog, store index, release pipeline and owner docs.
+The product built on the [Ola Dash SDK](https://github.com/abhi245y/ola-dash-sdk): an unofficial dash for the Ola S1 Pro Gen 1 electric scooter. This repo will hold the theme pack, installer, recovery watchdog, store index, release pipeline and owner docs.
 
 It is not the host app, the theme contract or the plugin API. Those live in the SDK, which is pinned here as a submodule at `sdk/` (the last pushed SDK commit). Start with the SDK's [README](https://github.com/abhi245y/ola-dash-sdk#readme) and `sdk/docs/`. The roadmap is in [docs/plan/PLAN.md](docs/plan/PLAN.md).
 
