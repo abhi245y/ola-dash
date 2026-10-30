@@ -7,8 +7,10 @@ Commands are `adb shell ...` on the root adb session. "Vendor shell" means the v
 ## Safety
 
 - Scooter parked on the stand, key present, charger state noted.
-- Debug build of the host installed; nothing else installed or updated.
-- No OTA (`com.olaelectric.ota` is not touched), no account sign-in, no PSN or Ola login.
+- Debug build of the host installed; nothing else installed or updated, except the AA receiver in M-aa (owner go-ahead).
+- Needs the `sdk/` submodule (E0.S1 merged), or `SDK_DIR=../ola-dash-sdk` for `tools/measure.sh`.
+- Pull logs into `tmp/` only (gitignored; they carry vehicle identifiers).
+- No OTA (`com.olaelectric.ota` is not touched), no account sign-in, no Ola login.
 - Restore the stock HMI at any point, and always at the end:
 
 ```sh
@@ -41,14 +43,27 @@ Record: probe, root, create, first-frame ms (M-compile), `Displayed` time (M-sta
 
 ### M-restart
 
+Process death of the home app, which is what E0.S6 relies on. The dev app must be home (see M-home).
+
 ```sh
 adb logcat -c
-adb shell am force-stop dev.olatool.dash       # dev app must be home; see M-home
+adb shell kill $(adb shell pidof dev.olatool.dash)
 sleep 5; adb shell pidof dev.olatool.dash
-adb logcat -d | grep -E 'ActivityManager.*(Start proc|Displayed) dev.olatool.dash'
+adb logcat -d | grep -E 'Start proc .*dev.olatool.dash|Displayed dev.olatool.dash'
+# second: the same with force-stop
+adb shell am force-stop dev.olatool.dash
 ```
 
-Record: relaunched yes/no, seconds from stop to `Displayed`. Second part: whether `recreate()` (rotate or `adb shell am start -n dev.olatool.dash/.MainActivity` while running) keeps the PID: compare `pidof` before and after.
+Record: relaunched yes/no for each, seconds from the kill to `Displayed`. If the panel stays blank (a dead home app leaves the panel blank on this unit), recover with `adb shell am start -n dev.olatool.dash/.MainActivity`, then `bash sdk/host/test/hmi-swap.sh stock`.
+
+Does `recreate()` keep the process? Force a configuration change and compare the PID:
+
+```sh
+adb shell pidof dev.olatool.dash
+adb shell settings put system font_scale 1.15     # changes the scooter: owner go-ahead
+sleep 3; adb shell pidof dev.olatool.dash
+adb shell settings put system font_scale 1.0      # undo
+```
 
 Changes the scooter: owner go-ahead (home app is stopped for a few seconds). Undo: `bash sdk/host/test/hmi-swap.sh stock`.
 
@@ -75,7 +90,8 @@ adb logcat -c
 adb shell am force-stop dev.olatool.dash
 adb shell am start -n dev.olatool.dash/.MainActivity
 sleep 10
-adb shell ls /sdcard/Android/data/dev.olatool.dash/files/logs/ && adb pull /sdcard/Android/data/dev.olatool.dash/files/logs/ logs-session-a/
+mkdir -p tmp && adb pull /sdcard/Android/data/dev.olatool.dash/files/logs tmp/logs
+grep -m20 -E 'onSpeedChanged|onStateChanged|onLock' tmp/logs/calls-*.log   # `<epoch ms> IMotor...onSpeedChanged [25]`
 ```
 
 Record: the callbacks present in the first second after start and their args (speed, state, lock, mode, battery); whether `onSpeedChanged 0` is among them; time from start to the first one. Repeat locked and unlocked, parked.
@@ -85,7 +101,8 @@ Record: the callbacks present in the first second after start and their args (sp
 Riding, steady speed, supervised. Scooter off the stand or on a rolling stand only with the owner's go-ahead.
 
 ```sh
-adb logcat -d -s OlaDash | grep -i onSpeedChanged    # or the calls-*.log from M-replay
+adb pull /sdcard/Android/data/dev.olatool.dash/files/logs tmp/logs
+grep onSpeedChanged tmp/logs/calls-*.log     # `<epoch ms> IMotor...onSpeedChanged [25]`; real callbacks are in the file, not logcat
 ```
 
 Record: longest gap in seconds between real `onSpeedChanged` callbacks over a minute at constant speed; also the shortest. Feeds the 5 s stale timeout.
@@ -126,33 +143,33 @@ Read-only unless noted.
 | Light sensor | `adb shell dumpsys sensorservice \| grep -i light` | present yes/no, name, range |
 | Clock after cold boot, no network | after a cold boot with no network: `adb shell date; adb shell settings get global auto_time` | date correct yes/no, `auto_time` value |
 | Package installer | `adb shell pm path com.android.packageinstaller` | path or empty |
-| HTTPS to GitHub | `adb shell am start -a android.intent.action.VIEW -d https://github.com`, or `curl -sI https://github.com` in the vendor shell | page loads yes/no; certificate error text if any |
-| Panel follows brightness | `adb shell settings get system screen_brightness`; then `adb shell settings put system screen_brightness 30`; look at the panel; undo with the value read first | panel changes yes/no |
-| SAW background start | `adb shell appops get dev.olatool.dash SYSTEM_ALERT_WINDOW`; `adb shell appops set dev.olatool.dash SYSTEM_ALERT_WINDOW allow`; with another app in front: `adb shell am start -n dev.olatool.dash/.MainActivity` | dash comes to the front yes/no |
+| HTTPS to GitHub | first `adb shell pm resolve-activity -a android.intent.action.VIEW -d https://github.com` (is there a browser?) and `which curl` in the vendor shell; then `adb shell am start -a android.intent.action.VIEW -d https://github.com`, or `curl -sI https://github.com` in the vendor shell | page loads yes/no; certificate error text if any; "no probe available" if neither exists. Vendor-shell curl does not use Android's CA store, which is what E6 needs, so a browser result counts for more |
+| Panel follows brightness | `adb shell settings get system screen_brightness`; then `adb shell settings put system screen_brightness 30`; observe the panel within 5 s (hmiclient may override it); undo with the value read first | panel changes yes/no |
+| SAW grant | `adb shell appops get dev.olatool.dash SYSTEM_ALERT_WINDOW`; `adb shell appops set dev.olatool.dash SYSTEM_ALERT_WINDOW allow` | grant works yes/no. The background-start test is deferred to E2: `am start` from a root shell is never a background start |
 
 Brightness and SAW: **changes the scooter: owner go-ahead.** Undo: `adb shell settings put system screen_brightness <value read first>`; `adb shell appops set dev.olatool.dash SYSTEM_ALERT_WINDOW default`. If the panel only follows `setScooterBrightnessLevel`, say so; whether that counts as a vehicle command goes in the D-log before any code uses it.
 
 ### M-dpad
 
-Handlebar buttons, parked then riding (riding supervised by the owner). Debug build logs handlebar callbacks.
+Handlebar buttons, parked then riding (riding supervised by the owner). The host writes handlebar callbacks to `calls-*.log`.
 
 ```sh
-adb logcat -c
 # press each handlebar button once, noting the order
-adb logcat -d -s OlaDash | grep -i -E 'dpad|handlebar'
+adb pull /sdcard/Android/data/dev.olatool.dash/files/logs tmp/logs
+grep onDpad_ tmp/logs/calls-*.log
 ```
 
-Record per button: callback fired parked yes/no, riding yes/no, and what the stock HMI does with it (watch the stock screen with `hmiclient` enabled). Also save the raw `can-*.log` for the `ola-can-reference` observations (`0x6AD` is a hypothesis, not a fact).
+Record per button: callback fired parked yes/no, riding yes/no, and what the stock HMI does with it (watch the stock screen with `hmiclient` enabled). Also keep the raw `tmp/logs/can-*.log` for the `ola-can-reference` observations (`0x6AD` is a hypothesis, not a fact).
 
 ### M-aa (optional, E7.S1 spike)
 
-Only if the owner's phone is there. Parked. Write the result in `docs/aa-spike.md` (go/no-go), numbers also here.
+Only if the owner's phone is there. Parked. Installing the receiver **changes the scooter: owner go-ahead**; undo: `adb shell pm uninstall com.andrerinas.headunitrevived`. Write the result in `docs/aa-spike.md` (go/no-go), numbers also here.
 
 ```sh
-adb shell pm list packages | grep headunitrevived        # com.andrerinas.headunitrevived installed? pin release and sha256
+adb shell pm list packages | grep headunitrevived        # installed? pin release and sha256
 adb shell dumpsys meminfo com.andrerinas.headunitrevived | grep 'TOTAL PSS'   # during a session
 adb shell dumpsys meminfo dev.olatool.dash | grep 'TOTAL PSS'
-adb shell dumpsys media.codec | grep -i -E 'avc|h264' | head   # decoder
+adb shell 'cat /vendor/etc/media_codecs*.xml' | grep -E 'avc|hevc'   # decoders
 ```
 
 Record: connect route (Headunit Server on shared Wi-Fi first), seconds from connect to video, touch-to-screen latency (by feel or 240 fps phone video), decoder name, host + receiver PSS, audio route, touch works, how to return to the dash, whether the receiver can leave a margin for the dash bar, whether it exposes navigation state to other apps. No phone sign-in on the scooter; the phone is the phone's.
