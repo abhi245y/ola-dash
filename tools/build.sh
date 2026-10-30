@@ -3,7 +3,7 @@
 # SDK_DIR=<checkout> builds an unpushed SDK instead of the sdk/ submodule pin.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-H=arlp-pc
+H=${BUILD_HOST:-arlp-pc}
 D=Documents/ola-dash-build
 ssh "$H" "mkdir -p $D"
 # -rlp, not -a: preserved mtimes make cargo skip rebuilds of changed files.

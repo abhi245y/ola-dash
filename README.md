@@ -12,7 +12,7 @@ tools/build.sh                 # APK in out/
 SDK_DIR=../ola-dash-sdk tools/build.sh   # build an unpushed SDK checkout instead
 ```
 
-The build runs on `arlp-pc` over ssh and bundles every theme in `themes/` into the APK. `themes/minimal` is a copy from the SDK, a placeholder until E4.
+The build runs over ssh on `$BUILD_HOST` (default `arlp-pc`, the maintainer's build PC; it needs the Android SDK and NDK listed in `sdk/docs/building.md`) and bundles every theme in `themes/` into the APK. `themes/minimal` is a copy from the SDK, a placeholder until E4.
 
 ## Disclaimer
 
