@@ -1,0 +1,10 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "version": "1.0.0",
+  "author": "Ola Dash SDK contributors",
+  "license": "GPL-3.0-or-later",
+  "contract": 6,
+  "entry": "main.slint",
+  "description": "Plain text layout: P when parked, trunk key, media and plugin text. Reference for the smallest working theme."
+}
