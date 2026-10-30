@@ -4,7 +4,7 @@ Results of the session-A checklist ([session-a.md](session-a.md)). One block per
 
 ## Per-theme timings
 
-`tools/measure.sh` appends a dated table below this heading. Debug build; note the `hmiclient` state per block.
+`tools/measure.sh` appends a dated table at the end of this file. Debug build; note the `hmiclient` state per block.
 
 ## Session A
 
