@@ -91,7 +91,7 @@ adb shell am force-stop dev.olatool.dash
 adb shell am start -n dev.olatool.dash/.MainActivity
 sleep 10
 mkdir -p tmp && adb pull /sdcard/Android/data/dev.olatool.dash/files/logs tmp/logs
-grep -m20 -E 'onSpeedChanged|onStateChanged|onLock' tmp/logs/calls-*.log   # `<epoch ms> IMotor...onSpeedChanged [25]`
+grep -m40 -E 'onSpeedChanged|LockState|onVehicleStateChanged|DriveMode|Soc' tmp/logs/calls-*.log   # `<epoch ms> IMotor...onSpeedChanged [25]`
 ```
 
 Record: the callbacks present in the first second after start and their args (speed, state, lock, mode, battery); whether `onSpeedChanged 0` is among them; time from start to the first one. Repeat locked and unlocked, parked.

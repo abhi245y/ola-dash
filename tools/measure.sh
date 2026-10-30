@@ -23,9 +23,9 @@ run() { if [ "$DRY" = 1 ]; then echo "+ ${ADB[*]} $*" >&2; else "${ADB[@]}" "$@"
 # in-app shell line
 ras() { run shell run-as "$PKG" sh -c "'$1'"; }
 
-# default is the bundled fallback (lib.rs): not pushed, measure it via the bundled copy
+# default is the bundled fallback (lib.rs maps it there): measured, never pushed
 themes=()
-for d in "$SDK_DIR"/themes/*/; do [ -f "$d/theme.json" ] && [ "$(basename "$d")" != default ] && themes+=("$(basename "$d")"); done
+for d in "$SDK_DIR"/themes/*/; do [ -f "$d/theme.json" ] && themes+=("$(basename "$d")"); done
 [ ${#themes[@]} -gt 0 ] || { echo "no themes under $SDK_DIR/themes" >&2; exit 1; }
 
 orig=$([ "$DRY" = 1 ] && echo ORIGINAL || "${ADB[@]}" shell run-as "$PKG" cat files/themes/active 2>/dev/null | tr -d '\r\n' || true)
@@ -34,6 +34,7 @@ trap restore EXIT
 
 run shell rm -rf /data/local/tmp/t
 for t in "${themes[@]}"; do
+  [ "$t" = default ] && continue
   run push "$SDK_DIR/themes/$t" "/data/local/tmp/t/$t" >/dev/null
   ras "mkdir -p files/themes && cp -r /data/local/tmp/t/$t files/themes/"
 done
