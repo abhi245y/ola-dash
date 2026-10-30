@@ -125,6 +125,7 @@ PR2:
 - [ ] T1 In `TrunkGate.java`, extract `notParked(testMode, bcmUnlocked, state, speedKmh)` from `refusal()`; `parked(..)` = `notParked(..) == null` or (charging and BCM unlocked and not test mode; speed not required while charging). `refusal()` calls it. Extend `TrunkGateTest.java`, including unknowns (fail closed) and "charging + test mode = not parked".
 - [ ] T2 Field id 39 pushed with `nativeSet` (not `setNum`) from the callbacks that change its inputs; `HostState.parked` in Slint. Sim derives it from the scenario (park, trunk, charge).
 - [ ] T3 Log `parked -> false while paused` (`onPause`/`onResume` flag in `MainActivity`). Closing host screens is E1.S3; bringing the host forward is E2.S1.
+- Note (M-replay risk): `parked` reads only the real BCM lock callback, so after a cold start in Park it stays false until the parser replays or re-fires that callback; if session A shows it never does, settings are unreachable until the scooter is locked and unlocked once. Fails closed.
 - AC: `javac -d host/build-tests host/java/dev/olatool/dash/TrunkGate.java host/test/TrunkGateTest.java && java -cp host/build-tests dev.olatool.dash.TrunkGateTest` passes and T1 adds those lines to `docs/testing.md`; the M-replay risk is written in the story notes.
 
 **E0.S5 Measurement kit** [ola-dash]
