@@ -134,11 +134,15 @@ PR2:
 - AC: every M-row except M-aa has a number or a yes/no.
 
 **E0.S6 Theme switching** [SDK] (after E1.S4 PR1)
-- [ ] T1 Restart switch: write `files/themes/previous` and `active`, write the clean-exit marker (so neither the strikes guard nor the watchdog counts it as a crash), then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart). An in-process swap is a separate story only if M-start minus M-compile is over 0.5 s.
+- [ ] T1 Restart switch: show the host "Switching to <theme>" screen (spinner) for one frame at least, write `files/themes/previous` and `active`, write the clean-exit marker (so neither the strikes guard nor the watchdog counts it as a crash), then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart).
+- [ ] T1b Hide the gap: the activity's `android:windowBackground` is a static drawable that matches the switching screen (dark fill + centred bitmap), so the rider sees the same screen from exit until the new theme's first frame. Android 10 cannot animate a window background, so the spinner is still only before exit and after the first frame.
+- [ ] T1c Faster start: `copyAssets` copies only when the APK changed (marker with `lastUpdateTime`), not on every start.
+- [ ] T1d Target: tap to new theme on screen in 2 s or less on the scooter (owner: "fine as long as it is not a laggy restart"). Measure it; if it is slower after T1c, open the in-process swap story from the backlog.
+- Unlock: a dash restart does not lock the scooter (the lock is BCM state). The host must not show the keypad while it waits for the first lock callback after a restart; it shows the switching screen until lock state is known (M-replay says how long).
 - [ ] T2 Only while `parked`, no alert, unlocked, not test mode.
 - [ ] T3 Root screen `confirm-theme`: "Keep this theme? Reverting in 10 s", Slint `Timer`; confirm deletes `previous`, timeout restores it and restarts.
 - [ ] T4 (separate small PR, Java only, any time) Bad-theme guard: `files/themes/strikes` = `<name> <n>`, set in `onCreate`, cleared 10 s after `onCreate`; two failed starts with the same theme make the third start load `default` and mark the theme bad. Test with a debug-only `debug.oladash.panic` property the Rust side reads.
-- AC: switching on the scooter keeps keypad, trunk and media working; a theme that panics at start is replaced on the third start.
+- AC: on the scooter, tap to new theme in 2 s or less with no keypad flash and no blank frame; keypad, trunk and media work after the switch; a theme that panics at start is replaced on the third start.
 
 ### E1 Hub: look, shell, settings
 
@@ -290,7 +294,7 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - Owner PIN for settings and a "lock word" shown only on real host keypads (owner chose later).
 - Signed store index with two keys and expiry, when a mirror or second maintainer appears.
 - Frame-time guard that reverts a theme which is too slow on the device.
-- In-process theme hot-swap (only if M-start minus M-compile is over 0.5 s).
+- In-process theme hot-swap (only if the restart switch misses the 2 s target after the faster start).
 - Theme sideload from a phone over the local network.
 - Third-party media plugins (needs a rule for `BIND_NOTIFICATION_LISTENER_SERVICE`).
 - macOS and Windows installer; auto theme rules; miles; CarPlay; Gen 2.
@@ -315,6 +319,6 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - D6: store index unsigned in 1.0: HTTPS from GitHub + SHA-256 + plugin cert pins + monotonic `seq`.
 - D7: installer and watchdog use the vendor diagnostics service, not root adb.
 - D8: launcher is a host Slint screen (designed, theme-styled); Java only lists apps and writes icon files.
-- D9: theme switch = process restart in 1.0 (second `android_main` cannot re-init Slint).
+- D9: theme switch = process restart in 1.0 (second `android_main` cannot re-init Slint), hidden behind a switching screen and a matching window background; target 2 s tap to new theme; owner accepts a restart that is not laggy.
 - D10: owner PIN deferred to the backlog (owner, 2026-10-30).
 - D11: UI design through the impeccable skill; Codex makes concept boards and assets and critiques comps; owner and lead decide.
