@@ -98,15 +98,15 @@ Brightness: if the panel only follows the vehicle path (`setScooterBrightnessLev
 ### E0 Foundation and safety fixes
 
 **E0.S1 Product repo bootstrap** [ola-dash]
-- [ ] T1 SDK submodule at `sdk/`; README (what this repo is, links to SDK docs), CHANGELOG.
-- [ ] T2 [SDK] `host/build.sh`: optional `EXTRA_THEMES=<dir>` copies each folder with a `theme.json` into `assets/themes/<id>/`; nothing else in `build.sh` changes. Bundled ids are reserved: they update with the host, the store never updates or removes them (`copyAssets` would undo it).
-- [ ] T3 `tools/build.sh`: the rsync + ssh recipe from `sdk/host/README.md` to `arlp-pc:~/Documents/ola-dash-build`, `EXTRA_THEMES=$PWD/themes`, APK copied back to `out/`.
+- [x] T1 SDK submodule at `sdk/`; README (what this repo is, links to SDK docs), CHANGELOG.
+- [x] T2 [SDK] `host/build.sh`: optional `EXTRA_THEMES=<dir>` copies each folder with a `theme.json` into `assets/themes/<id>/`; nothing else in `build.sh` changes. Bundled ids are reserved: they update with the host, the store never updates or removes them (`copyAssets` would undo it).
+- [x] T3 `tools/build.sh`: the rsync + ssh recipe from `sdk/host/README.md` to `arlp-pc:~/Documents/ola-dash-build`, `EXTRA_THEMES=$PWD/themes`, APK copied back to `out/`.
 - AC: with `themes/minimal` copied in as a placeholder, `unzip -l out/*.apk | grep assets/themes/minimal/theme.json` matches.
 
 **E0.S2 Theme sandbox** [SDK] (critical; blocks E0.S6, E3, E4, E6)
 PR1:
-- [ ] T1 `theme_root.rs` gets the one loader used by host and sim (`Compiler::set_file_loader`) on the probe compile, which is the gate (the root compile runs only after the probe passed, and also serves `files/host`). The loader canonicalizes the requested path, refuses symlinks, allows only the contract dir and the canonical theme dir, and returns `Some(Err(..))` for anything else (`None` falls through to the disk). `build_from_path` reads the entry file without the loader, so the entry gets the same path and keyword check in Rust first. Any theme file containing `PopupWindow`, `Tooltip` (lowered to a popup), `ContextMenuArea`, `MenuBar` or `std-widgets.slint` is refused (substring; a comment fails closed).
-- [ ] T2 Fixtures under SDK `tools/fixtures/` (not `themes/`): `evil2` (imports `../../host/ui/overlay.slint`, writes `HostState`), `evil3` (full-screen no-auto-close `PopupWindow`). `check-themes.sh` requires `sim --check` to fail on both.
+- [x] T1 `theme_root.rs` gets the one loader used by host and sim (`Compiler::set_file_loader`) on the probe compile, which is the gate (the root compile runs only after the probe passed, and also serves `files/host`). The loader canonicalizes the requested path, refuses symlinks, allows only the contract dir and the canonical theme dir, and returns `Some(Err(..))` for anything else (`None` falls through to the disk). `build_from_path` reads the entry file without the loader, so the entry gets the same path and keyword check in Rust first. Any theme file containing `PopupWindow`, `Tooltip` (lowered to a popup), `ContextMenuArea`, `MenuBar` or `std-widgets.slint` is refused (substring; a comment fails closed).
+- [x] T2 Fixtures under SDK `tools/fixtures/` (not `themes/`): `evil2` (imports `../../host/ui/overlay.slint`, writes `HostState`), `evil3` (full-screen no-auto-close `PopupWindow`). `check-themes.sh` requires `sim --check` to fail on both.
 PR2:
 - [ ] T3 `HostState` mirrors (`overlay.slint:74-90`): left/right indicator, high beam, headlight, ready, locked, charging, clock text, battery. Rust `apply()` writes them beside `Vehicle.*`; the overlay (`:139-149`) and lock screen (`:320-321`) read only `HostState`; sim `Feeder::push` and `host/test/unlock-preview.rs` set them too.
 - [ ] T4 Host font: overlay, lock screen and every host screen set `font-family` to a host-unique family name, registered from Rust (`slint::register_font_from_path`) before `load_ui` so its faces come first in fontique's family list; host text uses only weights the host font ships. `sim --check` rejects a theme whose `.ttf`/`.otf` bytes contain the host family name (ASCII or UTF-16BE substring); fixture `evil4` (blank-glyph font claiming the host name) must fail. E6.S1.T3 reuses the check. Why: fontique merges same-name registrations and picks the first exact-weight face; theme fonts register in path order (`collect_custom_fonts.rs:20-22`, fontique `collection/mod.rs:769-779`, `matching.rs:376-378`).
@@ -122,15 +122,15 @@ PR2:
 - AC: `sim --stale` shows the badge; on the dev scooter `am force-stop com.olaelectric.vehicleparser` shows NO DATA within 5 s.
 
 **E0.S4 Parked gate** [SDK]
-- [ ] T1 In `TrunkGate.java`, extract `notParked(testMode, bcmUnlocked, state, speedKmh)` from `refusal()`; `parked(..)` = `notParked(..) == null` or (charging and BCM unlocked and not test mode; speed not required while charging). `refusal()` calls it. Extend `TrunkGateTest.java`, including unknowns (fail closed) and "charging + test mode = not parked".
-- [ ] T2 Field id 39 pushed with `nativeSet` (not `setNum`) from the callbacks that change its inputs; `HostState.parked` in Slint. Sim derives it from the scenario (park, trunk, charge).
-- [ ] T3 Log `parked -> false while paused` (`onPause`/`onResume` flag in `MainActivity`). Closing host screens is E1.S3; bringing the host forward is E2.S1.
+- [x] T1 In `TrunkGate.java`, extract `notParked(testMode, bcmUnlocked, state, speedKmh)` from `refusal()`; `parked(..)` = `notParked(..) == null` or (charging and BCM unlocked and not test mode; speed not required while charging). `refusal()` calls it. Extend `TrunkGateTest.java`, including unknowns (fail closed) and "charging + test mode = not parked".
+- [x] T2 Field id 39 pushed with `nativeSet` (not `setNum`) from the callbacks that change its inputs; `HostState.parked` in Slint. Sim derives it from the scenario (park, trunk, charge).
+- [x] T3 Log `parked -> false while paused` (`onPause`/`onResume` flag in `MainActivity`). Closing host screens is E1.S3; bringing the host forward is E2.S1.
 - Note (M-replay risk): `parked` reads only the real BCM lock callback, so after a cold start in Park it stays false until the parser replays or re-fires that callback; if session A shows it never does, settings are unreachable until the scooter is locked and unlocked once. Fails closed.
 - AC: `javac -d host/build-tests host/java/dev/olatool/dash/TrunkGate.java host/test/TrunkGateTest.java && java -cp host/build-tests dev.olatool.dash.TrunkGateTest` passes and T1 adds those lines to `docs/testing.md`; the M-replay risk is written in the story notes.
 
 **E0.S5 Measurement kit** [ola-dash]
-- [ ] T1 `tools/measure.sh` (session-A tooling, debug build and adb): push SDK themes with `run-as`, cycle `files/themes/active`, restart with `am force-stop` + `am start`, collect `OlaDash` timings and `TOTAL PSS`.
-- [ ] T2 `docs/session-a.md`: one line per Measure-first row, plus the AA spike block if the phone is there. HTTPS probe: `am start -a android.intent.action.VIEW -d https://github.com`, or `curl` through the 50005 shell.
+- [x] T1 `tools/measure.sh` (session-A tooling, debug build and adb): push SDK themes with `run-as`, cycle `files/themes/active`, restart with `am force-stop` + `am start`, collect `OlaDash` timings and `TOTAL PSS`.
+- [x] T2 `docs/session-a.md`: one line per Measure-first row, plus the AA spike block if the phone is there. HTTPS probe: `am start -a android.intent.action.VIEW -d https://github.com`, or `curl` through the 50005 shell.
 - [ ] T3 Run session A with the owner; write `docs/measurements.md`; add handlebar and IMU evidence to `ola-can-reference` observations (`0x6AD` as a hypothesis).
 - AC: every M-row except M-aa has a number or a yes/no.
 
