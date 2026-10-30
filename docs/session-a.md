@@ -75,7 +75,7 @@ adb logcat -c
 adb shell am force-stop dev.olatool.dash
 adb shell am start -n dev.olatool.dash/.MainActivity
 sleep 10
-adb pull /sdcard/Android/data/dev.olatool.dash/files/calls-*.log .   # or the path from sdk/docs/testing.md "Session logs"
+adb shell ls /sdcard/Android/data/dev.olatool.dash/files/logs/ && adb pull /sdcard/Android/data/dev.olatool.dash/files/logs/ logs-session-a/
 ```
 
 Record: the callbacks present in the first second after start and their args (speed, state, lock, mode, battery); whether `onSpeedChanged 0` is among them; time from start to the first one. Repeat locked and unlocked, parked.
