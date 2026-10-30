@@ -109,10 +109,10 @@ PR1:
 - [ ] T2 Fixtures under SDK `tools/fixtures/` (not `themes/`): `evil2` (imports `../../host/ui/overlay.slint`, writes `HostState`), `evil3` (full-screen no-auto-close `PopupWindow`). `check-themes.sh` requires `sim --check` to fail on both.
 PR2:
 - [ ] T3 `HostState` mirrors (`overlay.slint:74-90`): left/right indicator, high beam, headlight, ready, locked, charging, clock text, battery. Rust `apply()` writes them beside `Vehicle.*`; the overlay (`:139-149`) and lock screen (`:320-321`) read only `HostState`; sim `Feeder::push` and `host/test/unlock-preview.rs` set them too.
-- [ ] T4 Host font: overlay, lock screen and every host screen set `font-family` from a font bundled in `files/host/`; the root stops forwarding `dash.default-font-family` to host text. Fixture `evil4` (theme font named like the host font with blank glyphs) must render readable host text.
+- [ ] T4 Host font: overlay, lock screen and every host screen set `font-family` from a font bundled in `files/host/` with a deliberately unique internal family name; the root stops forwarding `dash.default-font-family` to host text. The store CI reject (E6.S1.T3) is the guarantee against name collisions; this PR only checks which face Slint picks when two share a name and records it in the story notes.
 - [ ] T5 `sim --pixel X,Y` prints the colour at a point of the screenshot. `check-themes.sh`: `evil1` passes `sim --check`, and at t=13 the left-indicator pixel and a keypad key (`--state locked`) match `themes/minimal`.
 - Notes: `@image-url` and font files are read at runtime outside the loader; they can only display, which is acceptable. A theme re-declaring `global HostState` is harmless (only root exports are public).
-- AC: `check-themes.sh` exits 0 only if evil1 keeps a full overlay and keypad, evil2 and evil3 fail to load, and evil4 shows readable host text; `cargo test` and `unlock-preview` pass.
+- AC: `check-themes.sh` exits 0 only if evil1 keeps a full overlay and keypad and evil2 and evil3 fail to load; host text uses the host font in every theme; `cargo test` and `unlock-preview` pass.
 
 **E0.S3 Host hardening** [SDK]
 - [ ] T1 Stale data: `HostState.data-stale` (field id 38, host range, not replayed). Set on `onServiceDisconnected` / `onBindingDied`, and from the existing 1 s keep-alive tick when no real vehicle callback (`realVehicleEvent()`) arrived for 5 s while `state == drive` (`// ponytail: 5 s until M-rate calibrates it`); cleared in `subscribe`. Strip badge "NO DATA" copied from the TEST DATA block. `sim --stale`.
@@ -134,7 +134,7 @@ PR2:
 - AC: every M-row except M-aa has a number or a yes/no.
 
 **E0.S6 Theme switching** [SDK] (after E1.S4 PR1)
-- [ ] T1 Restart switch: write `files/themes/previous` and `active`, then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart). An in-process swap is a separate story only if M-start minus M-compile is over 0.5 s.
+- [ ] T1 Restart switch: write `files/themes/previous` and `active`, write the clean-exit marker (so neither the strikes guard nor the watchdog counts it as a crash), then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart). An in-process swap is a separate story only if M-start minus M-compile is over 0.5 s.
 - [ ] T2 Only while `parked`, no alert, unlocked, not test mode.
 - [ ] T3 Root screen `confirm-theme`: "Keep this theme? Reverting in 10 s", Slint `Timer`; confirm deletes `previous`, timeout restores it and restarts.
 - [ ] T4 (separate small PR, Java only, any time) Bad-theme guard: `files/themes/strikes` = `<name> <n>`, set in `onCreate`, cleared 10 s after `onCreate`; two failed starts with the same theme make the third start load `default` and mark the theme bad. Test with a debug-only `debug.oladash.panic` property the Rust side reads.
