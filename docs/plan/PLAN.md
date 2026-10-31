@@ -213,7 +213,7 @@ PR B (M4):
 - AC: changing an option or night updates the theme with no recompile.
 
 **E3.S2 Theme list and previews** [SDK]
-- [ ] T1 Theme pane shows `preview.png` (riding state with overlay, rendered by `sim`) or a placeholder; rescans `files/themes/` when opened; themes without `.store` (written by the store client) get a "sideloaded" badge.
+- [x] T1 (SDK #26; device check: copyAssets copies the .bundled dotfile) Theme pane shows `preview.png` (riding state with overlay, rendered by `sim`) or a placeholder; rescans `files/themes/` when opened; themes without `.store` (written by the store client) get a "sideloaded" badge.
 
 ### E4 Theme pack [ola-dash]
 
