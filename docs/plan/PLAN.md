@@ -115,10 +115,10 @@ PR2:
 - AC: `check-themes.sh` exits 0 only if evil1 keeps a full overlay and keypad and evil2, evil3 and evil4 fail to load; host text uses the host font in every theme; `cargo test` and `unlock-preview` pass.
 
 **E0.S3 Host hardening** [SDK]
-- [ ] T1 Stale data: `HostState.data-stale` (field id 38, host range, not replayed). Set on `onServiceDisconnected` / `onBindingDied`, and from the existing 1 s keep-alive tick when no real vehicle callback (`realVehicleEvent()`) arrived for 5 s while `state == drive` (`// ponytail: 5 s until M-rate calibrates it`); cleared in `subscribe`. Strip badge "NO DATA" copied from the TEST DATA block. `sim --stale`.
-- [ ] T2 `getWindow().addFlags(FLAG_KEEP_SCREEN_ON)` in `MainActivity.onCreate` (M-sleep verifies the locked panel still sleeps).
-- [ ] T3 One log line each for probe compile, root compile, `create()`, and first frame (`set_rendering_notifier`, once).
-- [ ] T4 Check a calls log for IMU floats and handlebar booleans (code already logs them); close with no code if present.
+- [x] T1 Stale data: `HostState.data-stale` (field id 38, host range, not replayed). Set on `onServiceDisconnected` / `onBindingDied`, and from the existing 1 s keep-alive tick when no real vehicle callback (`realVehicleEvent()`) arrived for 5 s while `state == drive` (`// ponytail: 5 s until M-rate calibrates it`); cleared in `subscribe`. Strip badge "NO DATA" copied from the TEST DATA block. `sim --stale`.
+- [x] T2 `getWindow().addFlags(FLAG_KEEP_SCREEN_ON)` in `MainActivity.onCreate` (M-sleep verifies the locked panel still sleeps).
+- [x] T3 One log line each for probe compile, root compile, `create()`, and first frame (`set_rendering_notifier`, once).
+- [~] T4 (needs a session-A calls log; current IMUData.toString prints floats) Check a calls log for IMU floats and handlebar booleans (code already logs them); close with no code if present.
 - AC: `sim --stale` shows the badge; on the dev scooter `am force-stop com.olaelectric.vehicleparser` shows NO DATA within 5 s.
 
 **E0.S4 Parked gate** [SDK]
