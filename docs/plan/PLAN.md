@@ -228,7 +228,7 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 ### E5 Release, recovery, installer [ola-dash unless noted]
 
 **E5.S1 Release build and pipeline**
-- [ ] T1 [SDK] Remove `android:debuggable` from the manifest; the debug build passes `aapt2 link --debug-mode`. `host/build.sh --release`: keystore from env, versionCode from the git tag, checks the flag with `aapt2 dump badging`, `apksigner verify`, prints the cert SHA-256.
+- [x] T1 [SDK] Remove `android:debuggable` from the manifest; the debug build passes `aapt2 link --debug-mode`. `host/build.sh --release`: keystore from env, versionCode from the git tag, checks the flag with `aapt2 dump badging`, `apksigner verify`, prints the cert SHA-256.
 - [ ] T2 GitHub Actions: on tag, build the release APK, publish APK + SHA256SUMS + cert digest (the skill's release pattern).
 
 **E5.S2 Recovery** (blocks installs by anyone but the owner)
