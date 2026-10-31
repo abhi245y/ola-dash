@@ -1,0 +1,106 @@
+import { Vehicle, Display, OverlayPlacement, OverlayStyle, LockStyle, LockKeyShape, LockDigits } from "vehicle.slint";
+import "fonts/NotoSans-SemiCondensedBold.ttf";
+
+export component Dash inherits Window {
+    width: 1280px;
+    height: 768px;
+    background: root.ground;
+    default-font-family: "Noto Sans SemiCondensed";
+
+    property <color> ground: Display.night ? #0B0B0B : #F4F1EA;
+    property <color> ink: Display.night ? #F4F1EA : #111111;
+    property <color> track: Display.night ? #2A2A2A : #DEDAD2;
+    property <color> fill: Display.night ? #3FB8B8 : #0F6E6E;
+
+    // Read each fact independently. Do not turn unknown data into a parked zero.
+    // Speed is km/h; any negative value is unavailable, including the -1 marker.
+    property <string> speed-text: Vehicle.speed-kmh < 0 ? "--" : "" + round(Vehicle.speed-kmh);
+    property <bool> battery-known: Vehicle.battery-pct >= 0;
+    property <float> battery-fraction: root.battery-known ? clamp(Vehicle.battery-pct / 100, 0, 1) : 0;
+    property <string> battery-text: root.battery-known ? "" + Vehicle.battery-pct + " %" : "--";
+
+    out property <OverlayPlacement> overlay-placement: OverlayPlacement.top;
+    // A cream strip fails the host's 3:1 rule for lit amber and red lights; the strip
+    // stays dark in both modes, as on the signed-off board.
+    out property <OverlayStyle> overlay-style: {
+        background: #111111,
+        foreground: #F4F1EA,
+        corner-radius: 0px,
+        show-labels: false,
+    };
+    out property <LockStyle> lock-style: {
+        background: root.ground,
+        foreground: root.ink,
+        muted: root.ink,
+        accent: root.fill,
+        key-background: root.ground,
+        key-border: root.track,
+        key-shape: LockKeyShape.grid,
+        digits: LockDigits.sans,
+    };
+
+    // The top 48 px belong to the host. One fixed numeric field fits three tabular
+    // digits; right-aligned so the unit sits beside the digits and existing glyphs
+    // stay put when a digit is added on the left.
+    // No state switch: ride, park, charge, reverse and easy-park all show speed.
+    // The host owns lock, charging, alerts and the stale-data warning.
+    Text {
+        x: 64px;
+        y: 64px;
+        width: 1000px;
+        height: 500px;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        text: root.speed-text;
+        color: root.ink;
+        font-size: 620px;
+        font-weight: 700;
+    }
+    // Same font metrics, fixed baseline at approximately y = 555 px.
+    Text {
+        x: 1088px;
+        y: 499px;
+        width: 136px;
+        height: 72px;
+        vertical-alignment: center;
+        text: "km/h";
+        color: root.ink;
+        font-size: 50px;
+        font-weight: 700;
+    }
+
+    // One shared track in every state. The fill is its own capsule (the software
+    // renderer clips to the box, not the rounded corners); its right end sits
+    // exactly at track.width * (battery / 100).
+    // No easing, minimum width, second track or charging sweep changes the value.
+    battery-track := Rectangle {
+        x: 56px;
+        y: 640px;
+        width: 1008px;
+        height: 56px;
+        border-radius: 28px;
+        background: root.track;
+        clip: true;
+
+        Rectangle {
+            x: 0px;
+            y: 0px;
+            width: parent.width * root.battery-fraction;
+            height: parent.height;
+            border-radius: min(28px, self.width / 2);
+            background: root.fill;
+        }
+    }
+    Text {
+        x: 1088px;
+        y: battery-track.y - 8px;
+        width: 136px;
+        height: 72px;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        text: root.battery-text;
+        color: root.ink;
+        font-size: 48px;
+        font-weight: 700;
+    }
+}
