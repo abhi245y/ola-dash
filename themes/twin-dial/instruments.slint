@@ -1,0 +1,159 @@
+// Pure geometry in window coordinates. Angles use degrees, clockwise, y down.
+export component InstrumentArc inherits Path {
+    in property <float> cx;
+    in property <float> cy;
+    in property <float> radius;
+    in property <float> start: 135;
+    in property <float> sweep: 270;
+
+    x: 0px;
+    y: 0px;
+    width: 1280px;
+    height: 768px;
+    viewbox-x: 0;
+    viewbox-y: 0;
+    viewbox-width: 1280;
+    viewbox-height: 768;
+    fill: transparent;
+    visible: root.sweep > 0.01;
+    commands: "M " + (cx + radius * Math.cos(start * 1deg)) + " " + (cy + radius * Math.sin(start * 1deg))
+        + " A " + radius + " " + radius + " 0 " + (sweep > 180 ? "1" : "0") + " 1 "
+        + (cx + radius * Math.cos((start + sweep) * 1deg)) + " " + (cy + radius * Math.sin((start + sweep) * 1deg));
+}
+
+export component InstrumentTick inherits Path {
+    in property <float> cx;
+    in property <float> cy;
+    in property <float> radius;
+    in property <float> angle;
+    in property <float> tick-length: 16;
+
+    x: 0px;
+    y: 0px;
+    width: 1280px;
+    height: 768px;
+    viewbox-x: 0;
+    viewbox-y: 0;
+    viewbox-width: 1280;
+    viewbox-height: 768;
+    fill: transparent;
+    stroke: #dce4ed;
+    stroke-width: 3px;
+    commands: "M " + (cx + radius * Math.cos(angle * 1deg)) + " " + (cy + radius * Math.sin(angle * 1deg))
+        + " L " + (cx + (radius - tick-length) * Math.cos(angle * 1deg)) + " " + (cy + (radius - tick-length) * Math.sin(angle * 1deg));
+}
+
+// A true circle needs two arcs; a single 360 degree SVG arc is degenerate.
+export component InstrumentFace inherits Path {
+    in property <float> cx;
+    in property <float> cy;
+    in property <float> radius;
+
+    x: 0px;
+    y: 0px;
+    width: 1280px;
+    height: 768px;
+    viewbox-x: 0;
+    viewbox-y: 0;
+    viewbox-width: 1280;
+    viewbox-height: 768;
+    fill: #0b0e13;
+    stroke: #344353;
+    stroke-width: 2px;
+    commands: "M " + (cx + radius * Math.cos(0deg)) + " " + (cy + radius * Math.sin(0deg))
+        + " A " + radius + " " + radius + " 0 1 1 " + (cx + radius * Math.cos(180deg)) + " " + (cy + radius * Math.sin(180deg))
+        + " A " + radius + " " + radius + " 0 1 1 " + (cx + radius * Math.cos(360deg)) + " " + (cy + radius * Math.sin(360deg)) + " Z";
+}
+
+export component InstrumentNeedle inherits Path {
+    in property <float> cx;
+    in property <float> cy;
+    in property <float> radius;
+    in property <float> angle;
+    in property <color> ink: #ff7a1a;
+    in property <bool> bold: false;
+    property <float> half-width: bold ? 7 : 3.5;
+
+    x: 0px;
+    y: 0px;
+    width: 1280px;
+    height: 768px;
+    viewbox-x: 0;
+    viewbox-y: 0;
+    viewbox-width: 1280;
+    viewbox-height: 768;
+    fill: root.ink;
+    stroke: #05070a;
+    stroke-width: 1.5px;
+    // Flat 2 px tip: a sharp tip turns the outline's miter join into a spike past the end.
+    commands: "M " + (cx + radius * Math.cos(angle * 1deg) + Math.cos((angle - 90) * 1deg)) + " " + (cy + radius * Math.sin(angle * 1deg) + Math.sin((angle - 90) * 1deg))
+        + " L " + (cx + radius * Math.cos(angle * 1deg) + Math.cos((angle + 90) * 1deg)) + " " + (cy + radius * Math.sin(angle * 1deg) + Math.sin((angle + 90) * 1deg))
+        + " L " + (cx + half-width * Math.cos((angle + 90) * 1deg)) + " " + (cy + half-width * Math.sin((angle + 90) * 1deg))
+        + " L " + (cx - 14 * Math.cos(angle * 1deg)) + " " + (cy - 14 * Math.sin(angle * 1deg))
+        + " L " + (cx + half-width * Math.cos((angle - 90) * 1deg)) + " " + (cy + half-width * Math.sin((angle - 90) * 1deg)) + " Z";
+}
+
+export component InstrumentHub inherits InstrumentFace {
+    radius: 11;
+    fill: #0b0e13;
+    stroke: #aebcca;
+    stroke-width: 2px;
+}
+
+export component SmallInstrument inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <string> maximum;
+    in property <float> fraction;
+    in property <bool> known;
+    in property <float> cx;
+    in property <float> cy: 594;
+
+    x: 0px;
+    y: 0px;
+    width: 1280px;
+    height: 768px;
+    background: transparent;
+
+    InstrumentFace { cx: root.cx; cy: root.cy; radius: 86; }
+    InstrumentArc { cx: root.cx; cy: root.cy; radius: 72; stroke: #344353; stroke-width: 8px; }
+    InstrumentArc {
+        cx: root.cx; cy: root.cy; radius: 72;
+        sweep: 270 * clamp(root.fraction, 0, 1);
+        stroke: #dce4ed; stroke-width: 8px;
+        visible: root.known && root.fraction > 0;
+    }
+    for step in [0, 1, 2, 3, 4] : InstrumentTick {
+        cx: root.cx; cy: root.cy; radius: 81;
+        angle: 135 + 67.5 * step;
+        tick-length: 12;
+        stroke-width: 2px;
+    }
+    Text {
+        x: root.cx * 1px - 70px; y: root.cy * 1px - 44px;
+        width: 140px; height: 34px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: root.label; color: #adb9c7;
+        font-size: 24px; font-weight: 700; letter-spacing: 1px;
+    }
+    Text {
+        x: root.cx * 1px - 70px; y: root.cy * 1px - 5px;
+        width: 140px; height: 50px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: root.value; color: #ffffff;
+        font-size: 40px; font-weight: 700;
+    }
+    Text {
+        x: root.cx * 1px - 66px; y: root.cy * 1px + 46px;
+        width: 54px; height: 34px;
+        horizontal-alignment: center; vertical-alignment: center;
+        visible: root.maximum != ""; // a percentage states its own scale
+        text: "0"; color: #adb9c7; font-size: 26px;
+    }
+    Text {
+        x: root.cx * 1px + 8px; y: root.cy * 1px + 46px;
+        width: 62px; height: 34px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: root.maximum; color: #adb9c7; font-size: 26px;
+    }
+}
