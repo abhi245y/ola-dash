@@ -48,5 +48,5 @@ when parked, no alert, unlocked, not test mode.
 
 - **Strip**: dark band, lights as solid glyphs, lit in their status colour, unlit as 40 % `strip-fg` outlines; NO DATA and TEST DATA badges in its end cell.
 - **Lock screen**: left column clock (120), date (22), battery `82%` with a small battery glyph (40); right column caption, six passcode cells, keypad. Lock and charging state only in the strip.
-- **Settings**: left rail (rows 72 px, selected = pill), right pane with title, content, one primary button, close button; a small status line `18:24 · 82%` only where the strip is hidden behind nothing else showing the clock.
+- **Settings**: left rail (rows 72 px, selected = pill), right pane with title, content, one primary button, close button; a small status line `18:24 · 82%` at the bottom right (the strip carries no clock or battery, so this is their one place).
 - **Alert cards**: `surface` card on a 60 % scrim, red/amber frame by severity, icon + title (32) + one-line hint; same in both modes.
