@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SDK = ROOT / "sdk"
 
 ID_RE = re.compile(r"[a-z0-9-]{1,64}")
-ALWAYS_RESERVED = {"default", "fallback", "last-resort", "active"}
+ALWAYS_RESERVED = {"default", "fallback", "last-resort", "active", "previous", "bad", "strikes", "restart"}
 EXTS = {".slint", ".json", ".png", ".svg", ".ttf", ".otf", ".ttc", ".txt"}
 MAX_FILES = 200
 MAX_INFLATED = 2 * 1024 * 1024

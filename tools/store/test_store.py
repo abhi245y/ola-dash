@@ -128,7 +128,7 @@ class ThemeZip(unittest.TestCase):
         self.refused(f, pattern="preview.png")
 
     def test_reserved_id(self):
-        for i in ("default", "fallback", "last-resort", "active", "minimal"):
+        for i in ("default", "fallback", "last-resort", "active", "previous", "bad", "strikes", "restart", "minimal"):
             self.refused(good_files(i), pattern="reserved")
         self.refused(good_files("Fallback"), pattern="does not match")
 

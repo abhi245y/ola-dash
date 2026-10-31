@@ -18,7 +18,7 @@ Unknown keys are refused (they catch typos).
 
 | Field | Type | Rule |
 |---|---|---|
-| `id` | string | `[a-z0-9-]{1,64}` (the SDK theme id rule), unique in `themes`, equals `id` in the zip's `theme.json`. Reserved (any case): `default`, `fallback`, `last-resort`, `active`, and every folder in this repo's `themes/` (and the SDK's `themes/`). |
+| `id` | string | `[a-z0-9-]{1,64}` (the SDK theme id rule), unique in `themes`, equals `id` in the zip's `theme.json`. Reserved (any case): `default`, `fallback`, `last-resort`, `active`, `previous`, `bad`, `strikes`, `restart` (host selection files in `files/themes/`), and every folder in this repo's `themes/` (and the SDK's `themes/`). |
 | `name` | string | Display name. |
 | `version` | string | Display version, e.g. `1.2.0`. |
 | `author` | string | |

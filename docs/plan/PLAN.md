@@ -177,7 +177,7 @@ PR B (M4):
 
 **E1.S4 Settings core** [SDK]
 - [x] PR1: `files/settings.json` owned by Rust (read in `run()` before `load_ui`, exposed as root properties, written by root callback `set-setting(key, value)` via temp file + rename; a parse failure renames it `.bad` and starts from defaults, unit-tested). Rail and pane, rail rows 72 px; the rail lists only panes that exist. Panes: Display (night on/off, 12/24 h clock in the `CLOCK_HHMM` arm, brightness only if M-dev allows), About (from `files/about.json` written by Java at start: version + git rev, contract, cert SHA-256, log size and clear). Navigation model on every pane: `cursor`, `move(d)`, `select()`, `close()`, used by touch and by E1.S5.
-- [ ] PR2 (after E0.S6): Theme pane (installed themes, apply via E0.S6), first-run card (theme, night) shown when `parked`, or `state == park` with speed unknown; it launches nothing.
+- [x] PR2 (after E0.S6): Theme pane (installed themes, apply via E0.S6), first-run card (theme, night); it launches nothing. The card waits for the host-screen gate (`TrunkGate.parked`), not "park with speed unknown": one shared gate stays the only rule. Follow-ups: dim the hub while first-run or confirm-theme blocks it; "In use" follows `themes/active`, not a compile fallback.
 - AC: settings survive a restart; a corrupt file never crashes the host; `sim --screen settings` captures per pane.
 
 **E1.S5 Plugins pane** [SDK]
