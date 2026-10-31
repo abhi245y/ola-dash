@@ -1,0 +1,1 @@
+# Exact build fingerprints, one per line; filled from scooter session A.
