@@ -323,5 +323,6 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - D8: launcher is a host Slint screen (designed, theme-styled); Java only lists apps and writes icon files.
 - D9: theme switch = process restart in 1.0 (second `android_main` cannot re-init Slint), hidden behind a switching screen and a matching window background; target 2 s tap to new theme; owner accepts a restart that is not laggy.
 - D10: owner PIN deferred to the backlog (owner, 2026-10-30).
+- D13 (2026-10-31): host design language = "Ride Buddy, day and night": one system with a light day mode and a dark night mode, switched by `Display.night`; sunny pill selection; one fact per screen; 48 px strip. Owner's choice after four directions (comps in SDK `.impeccable/mocks/e1s2/`).
 - D12 (2026-10-31): the "Instrument" design direction becomes the Twin Dial theme (E4.S1), not the host look.
 - D11: UI design through the impeccable skill; Codex makes concept boards and assets and critiques comps; owner and lead decide.
