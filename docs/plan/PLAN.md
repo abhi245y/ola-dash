@@ -219,9 +219,9 @@ PR B (M4):
 
 Design process as in E1. Every theme: concept board (Codex) and critique, owner sign-off, implementation, `sim` captures (riding, parked, charging, locked, alert), `lock-style`, overlay settings, `preview.png`, `check-themes` pass (sandbox included), under 2 MB, M-frame on the scooter. Dials are drawn with paths and `sin`/`cos`, never `transform-rotation`. At most three `animation-tick()` bindings. Contract data only. Night optional.
 
-- [ ] E4.S1 **Twin dial** (look: the "Instrument" direction from the E1.S2 round, owner's choice: dark glass, engraved scales, copper accent kept distinct from amber): analog speedometer, power/regen dial (`current-a` x `voltage-v`), small battery and temperature dials. Options: accent, needle style, digital speed overlay, power bar instead of dial.
-- [ ] E4.S2 **Terminal**: monospace on black, readout lines that change only when values change, ASCII bar gauges, one blinking cursor. Options: green, amber, white; scanlines.
-- [ ] E4.S3 **Zen**: speed and battery only, very large type, for sunlight.
+- [x] E4.S1 (#5; M-frame on scooter pending) **Twin dial** (look: the "Instrument" direction from the E1.S2 round, owner's choice: dark glass, engraved scales, copper accent kept distinct from amber): analog speedometer, power/regen dial (`current-a` x `voltage-v`), small battery and temperature dials. Options: accent, needle style, digital speed overlay, power bar instead of dial.
+- [x] E4.S2 (#6; M-frame pending) **Terminal**: monospace on black, readout lines that change only when values change, ASCII bar gauges, one blinking cursor. Options: green, amber, white; scanlines.
+- [x] E4.S3 (#7; M-frame pending) **Zen**: speed and battery only, very large type, for sunlight.
 - [ ] E4.S4 **Cockpit**: AAOS-style card home (navigation, media, vehicle, plugin widgets). After E8.
 - [ ] E4.S5 Default theme refresh to the new design language [SDK].
 
