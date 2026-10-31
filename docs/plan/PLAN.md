@@ -73,6 +73,7 @@ Checklist with one shell line per row in `ola-dash/docs/session-a.md`; results i
 | M-sleep | Does a locked scooter still sleep the panel with `FLAG_KEEP_SCREEN_ON` set? | E0.S3.T2 |
 | M-home | Does `cmd package set-home-activity` work without disabling `hmiclient`; does the stock HMI stay in the background? | E5.S2 design |
 | M-dev | `Sensor.TYPE_LIGHT`; `date` and `AUTO_TIME` after a cold boot without network; `com.android.packageinstaller`; HTTPS to GitHub with the head unit CA store; panel follows `screen_brightness`; SAW background start | E3.S1, E6, E1.S4, E2 |
+| M-render | Strip glyph strokes and host text on the device's GL renderer match the sim | E1.S2 sign-off |
 | M-dpad | Which handlebar buttons fire while parked and riding, and what the stock HMI does with them | E1.S6 |
 | M-aa | AA spike numbers (E7.S1), if the owner's phone is there | E7 |
 
