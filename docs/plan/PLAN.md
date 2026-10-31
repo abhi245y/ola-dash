@@ -294,6 +294,7 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 
 ## Backlog
 
+- Contract: let themes follow the 12/24-hour setting (e.g. `Display.clock24` in a later contract), since `Vehicle.clock-text` stays HH:MM for compatibility.
 - Owner PIN for settings and a "lock word" shown only on real host keypads (owner chose later).
 - Signed store index with two keys and expiry, when a mirror or second maintainer appears.
 - Frame-time guard that reverts a theme which is too slow on the device.
