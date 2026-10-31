@@ -289,8 +289,8 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 
 ### E8 Android Automotive exploration (research, timeboxed)
 
-- [ ] T1 Which AAOS pieces and patterns (CarLauncher layout, media centre, Car UI library styles, Car App Library templates) can run app-level on Android 10 without car service or system privileges, and which can only be borrowed as design.
-- [ ] T2 `docs/aaos-notes.md`; feeds E4.S4 and E2.S2.
+- [x] T1 Which AAOS pieces and patterns (CarLauncher layout, media centre, Car UI library styles, Car App Library templates) can run app-level on Android 10 without car service or system privileges, and which can only be borrowed as design.
+- [x] T2 `docs/aaos-notes.md`; feeds E4.S4 and E2.S2.
 
 ## Backlog
 

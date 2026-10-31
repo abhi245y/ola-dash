@@ -134,6 +134,14 @@ adb shell pidof com.olaelectric.hmiclient
 
 Record: resolve-activity result, top activity after HOME, whether `hmiclient` still runs. **Changes the scooter: owner go-ahead.** Undo: `adb shell cmd package set-home-activity com.olaelectric.hmiclient/.MainActivity` or `bash sdk/host/test/hmi-swap.sh stock`.
 
+### AAOS host check (read only)
+
+```sh
+adb shell pm list packages | grep -i -E 'car|auto|templat'
+```
+
+Record the list in measurements.md (E8 note: a templated-app host would change the plan; none expected).
+
 ### M-render (GL renderer looks)
 
 The sim uses the software renderer; the scooter uses Skia on OpenGL. With the dash in front, capture the strip and the lock screen:
