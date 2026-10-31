@@ -218,7 +218,7 @@ PR B (M4):
 
 Design process as in E1. Every theme: concept board (Codex) and critique, owner sign-off, implementation, `sim` captures (riding, parked, charging, locked, alert), `lock-style`, overlay settings, `preview.png`, `check-themes` pass (sandbox included), under 2 MB, M-frame on the scooter. Dials are drawn with paths and `sin`/`cos`, never `transform-rotation`. At most three `animation-tick()` bindings. Contract data only. Night optional.
 
-- [ ] E4.S1 **Twin dial**: analog speedometer, power/regen dial (`current-a` x `voltage-v`), small battery and temperature dials. Options: accent, needle style, digital speed overlay, power bar instead of dial.
+- [ ] E4.S1 **Twin dial** (look: the "Instrument" direction from the E1.S2 round, owner's choice: dark glass, engraved scales, copper accent kept distinct from amber): analog speedometer, power/regen dial (`current-a` x `voltage-v`), small battery and temperature dials. Options: accent, needle style, digital speed overlay, power bar instead of dial.
 - [ ] E4.S2 **Terminal**: monospace on black, readout lines that change only when values change, ASCII bar gauges, one blinking cursor. Options: green, amber, white; scanlines.
 - [ ] E4.S3 **Zen**: speed and battery only, very large type, for sunlight.
 - [ ] E4.S4 **Cockpit**: AAOS-style card home (navigation, media, vehicle, plugin widgets). After E8.
@@ -323,4 +323,5 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - D8: launcher is a host Slint screen (designed, theme-styled); Java only lists apps and writes icon files.
 - D9: theme switch = process restart in 1.0 (second `android_main` cannot re-init Slint), hidden behind a switching screen and a matching window background; target 2 s tap to new theme; owner accepts a restart that is not laggy.
 - D10: owner PIN deferred to the backlog (owner, 2026-10-30).
+- D12 (2026-10-31): the "Instrument" design direction becomes the Twin Dial theme (E4.S1), not the host look.
 - D11: UI design through the impeccable skill; Codex makes concept boards and assets and critiques comps; owner and lead decide.
