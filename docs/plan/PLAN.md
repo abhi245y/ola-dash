@@ -254,10 +254,10 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 ### E6 Store
 
 **E6.S1 Format, index, submission CI** [ola-dash]
-- [ ] T1 Theme package: zip of the theme folder, only `.slint .json .png .svg .ttf .otf .txt`, 2 MB inflated, 200 files, images up to 2048 x 2048, `preview.png` required; id `[A-Za-z0-9_-]{1,64}`; `default`, `fallback`, `last-resort` and bundled pack ids reserved.
-- [ ] T2 `store/index.json` (at most 1 MB): `seq`, entries with URL (release asset), size, SHA-256; plugins add package, versionCode, signing cert SHA-256, slots, permissions.
-- [ ] T3 CI: unpack caps, `check-themes` (with the sandbox fixtures), `sim` previews, `animation-tick` count, theme fonts must not claim the host font family. Plugin APKs: `aapt2 dump permissions`; reject `SYSTEM_ALERT_WINDOW`, `BIND_ACCESSIBILITY_SERVICE`, `BIND_DEVICE_ADMIN`, `BIND_NOTIFICATION_LISTENER_SERVICE` (1.0 media comes from the host's built-in source only), `REQUEST_INSTALL_PACKAGES`, `PACKAGE_USAGE_STATS`, HOME activities, and dex or manifest references to `com.olaelectric.vehicleparser`, `com.olaelectric.vehicleinterface`, `ICommanderService`.
-- [ ] T4 Reviewer rules: no passcode or PIN entry UI in themes; numbers on sim captures match the mock values.
+- [x] T1 Theme package: zip of the theme folder, only `.slint .json .png .svg .ttf .otf .ttc .txt`, 2 MB inflated, 200 files, images up to 2048 x 2048, `preview.png` required; id `[a-z0-9-]{1,64}`; `default`, `fallback`, `last-resort` and bundled pack ids reserved.
+- [x] T2 `store/index.json` (at most 1 MB): `seq`, entries with URL (release asset), size, SHA-256; plugins add package, versionCode, signing cert SHA-256, slots, permissions.
+- [x] T3 CI: unpack caps, `check-themes` (with the sandbox fixtures), `sim` previews, `animation-tick` count, theme fonts must not claim the host font family. Plugin APKs: `aapt2 dump permissions`; reject `SYSTEM_ALERT_WINDOW`, `BIND_ACCESSIBILITY_SERVICE`, `BIND_DEVICE_ADMIN`, `BIND_NOTIFICATION_LISTENER_SERVICE` (1.0 media comes from the host's built-in source only), `REQUEST_INSTALL_PACKAGES`, `PACKAGE_USAGE_STATS`, HOME activities, and dex or manifest references to `com.olaelectric.vehicleparser`, `com.olaelectric.vehicleinterface`, `ICommanderService`.
+- [x] T4 Reviewer rules: no passcode or PIN entry UI in themes; numbers on sim captures match the mock values.
 
 **E6.S2 Store client: browse** [SDK]
 - [ ] T1 Fetch `index.json` over HTTPS from GitHub (Java); TLS failure is an error, never a fallback to http; refuse a `seq` lower than the last accepted; list with previews; parked only.
