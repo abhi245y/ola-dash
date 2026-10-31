@@ -154,9 +154,9 @@ make the final call; the agreed token list is the input to the implementer PR. H
 
 **E1.S1 Contract v7** [SDK]
 PR A (M1):
-- [ ] T1 `Actions.open-apps()`, `Actions.open-themes()`: wired to log lines in `wire()` and sim until E1.S3.
-- [ ] T2 `Display` global `in property <bool> night`; `Vehicle.data-stale` (the `apply()` arm writes `HostState` and `Vehicle`).
-- [ ] T3 `contract-version` 7, `HOST_CONTRACT`, `docs/contract.md`, CHANGELOG.
+- [x] T1 `Actions.open-apps()`, `Actions.open-themes()`: wired to log lines in `wire()` and sim until E1.S3.
+- [x] T2 `Display` global `in property <bool> night`; `Vehicle.data-stale` (the `apply()` arm writes `HostState` and `Vehicle`).
+- [x] T3 `contract-version` 7, `HOST_CONTRACT`, `docs/contract.md`, CHANGELOG.
 PR B (M4):
 - [ ] T4 Theme options: `theme.json` `options` `[{id, type: color|bool|int|choice, default, label, values?}]`, id `[a-z0-9-]`, at most 16; `Dash` declares `in property <T> opt-<id>` (`int`, `bool`, `string`, `color` only). `root_source` emits the same properties on `Host` and binds them into `dash := Dash {..}`; options whose probe type does not map are skipped with a log line. `sim --opt id=value`, `--night`; `sim --check` validates `options`. Rule in `docs/themes.md`: option properties are `int`, `bool`, `string` or `color` (`length` passes the probe as Number and fails the root compile, which `sim --check` catches).
 - [ ] T5 Skill sync after the first SDK push of v7 (`tools/sync.py`; template theme gets one option and night by hand).
