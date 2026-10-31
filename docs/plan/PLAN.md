@@ -142,7 +142,7 @@ PR2:
 - Unlock: a dash restart does not lock the scooter (the lock is BCM state). The host must not show the keypad while it waits for the first lock callback after a restart; it shows the switching screen until lock state is known (M-replay says how long).
 - [ ] T2 Only while `parked`, no alert, unlocked, not test mode.
 - [ ] T3 Root screen `confirm-theme`: "Keep this theme? Reverting in 10 s", Slint `Timer`; confirm deletes `previous`, timeout restores it and restarts.
-- [ ] T4 (separate small PR, Java only, any time) Bad-theme guard: `files/themes/strikes` = `<name> <n>`, set in `onCreate`, cleared 10 s after `onCreate`; two failed starts with the same theme make the third start load `default` and mark the theme bad. Test with a debug-only `debug.oladash.panic` property the Rust side reads (follow-up: not in the first PR; until then seed `files/themes/strikes` by hand).
+- [x] T4 (separate small PR, Java only, any time) Bad-theme guard: `files/themes/strikes` = `<name> <n>`, set in `onCreate`, cleared 10 s after `onCreate`; two failed starts with the same theme make the third start load `default` and mark the theme bad. Test with a debug-only `debug.oladash.panic` property the Rust side reads (follow-up: not in the first PR; until then seed `files/themes/strikes` by hand).
 - AC: on the scooter, tap to new theme in 2 s or less with no keypad flash and no blank frame; keypad, trunk and media work after the switch; a theme that panics at start is replaced on the third start.
 
 ### E1 Hub: look, shell, settings
