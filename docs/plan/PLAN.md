@@ -239,9 +239,9 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - AC: a crash-looping build restores the stock HMI without a laptop; sleep, wake, theme switch, store install and 30 min of AA in front never trigger it.
 
 **E5.S3 Installer core**
-- [ ] T1 Python 3 + `grpcio`, Linux first; scooter discovery over link-local IPv6 (ping `ff02::1`, neighbour table), reusing the ola-s1-rea client code.
-- [ ] T2 Preflight: `id -u` = 0 over the service, build fingerprint in the known-good list, free space, `com.olaelectric.ota` state reported (never changed); the owner confirms parked and charged (deliberately the only vehicle check).
-- [ ] T3 Backup: package states, current home, appops it will change.
+- [x] T1 Python 3 + `grpcio`, Linux first; scooter discovery over link-local IPv6 (ping `ff02::1`, neighbour table), reusing the ola-s1-rea client code.
+- [x] T2 Preflight: `id -u` = 0 over the service, build fingerprint in the known-good list, free space, `com.olaelectric.ota` state reported (never changed); the owner confirms parked and charged (deliberately the only vehicle check).
+- [x] T3 Backup: package states, current home, appops it will change.
 
 **E5.S4 Installer commands**
 - [ ] T1 `install`: push APKs in chunks, install host and watchdog, grant notification listener, `SYSTEM_ALERT_WINDOW`, `PACKAGE_USAGE_STATS`, `REQUEST_INSTALL_PACKAGES`, `WRITE_SETTINGS` (if M-dev needs it), set home, wait for the heartbeat.
