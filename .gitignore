@@ -2,3 +2,5 @@ tmp/
 target/
 out/
 build/
+__pycache__/
+*.pyc
