@@ -62,7 +62,7 @@ def _entries(items, spec, key, label, problems, reserved=()):
             problems.append(f"{where}: unknown key {k!r}")
         for k, kind in spec.items():
             if not _field(kind, e.get(k)):
-                problems.append(f"{where}: bad or missing {k!r}" + (" (https://github.com/ only)" if kind == URL else ""))
+                problems.append(f"{where}: bad or missing {k!r}" + (" (GitHub release download URLs only)" if kind == URL else ""))
         cap = MAX_THEME if label == "themes" else MAX_PLUGIN
         if type(e.get("size")) is int and e["size"] > cap:
             problems.append(f"{where}: size {e['size']} is over {cap}")
@@ -112,8 +112,12 @@ def changed(index, previous):
 def previous_index():
     r = subprocess.run(["git", "-C", str(ROOT), "show", "origin/main:store/index.json"],
                        capture_output=True, text=True)
+    if r.returncode:
+        if "does not exist" in r.stderr or "exists on disk, but not in" in r.stderr:
+            return None
+        raise ValueError(f"cannot read origin/main:store/index.json: {r.stderr.strip()}")
     try:
-        return json.loads(r.stdout) if r.returncode == 0 else None
+        return json.loads(r.stdout)
     except ValueError as e:
         raise ValueError(f"origin/main:store/index.json is not valid JSON: {e}")
 

@@ -52,6 +52,12 @@ jobs:
         with:
           packages: 'build-tools;34.0.0'
 
+      - name: Build the sim
+        if: steps.changed.outputs.themes == 'true'
+        run: |
+          cargo build --release --manifest-path sdk/sim/Cargo.toml
+          echo "SIM=$PWD/sdk/sim/target/release/sim" >> "$GITHUB_ENV"
+
       - name: Check changed entries
         if: steps.changed.outputs.themes == 'true' || steps.changed.outputs.plugins == 'true'
         run: |

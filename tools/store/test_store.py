@@ -150,11 +150,9 @@ class ThemeZip(unittest.TestCase):
         self.refused({**good_files(), "a.txt": "animation_tick()" * 2,
                       "b.json": "animation-tick ()" * 2}, pattern="animation-tick")
 
-    def test_animation_tick_comments(self):
-        source = "// animation-tick()\n/* animation_tick()\nanimation-tick() */\nanimation_tick()" * 3
-        z = make_zip(self.tmp / "g.zip", {**good_files(), "extra.txt": source})
-        with mock.patch.object(ct, "sim_checks"):
-            self.assertEqual(ct.main([str(z)]), 0)
+    def test_animation_tick_counts_comments_and_strings(self):
+        source = 'u: "//"; a: animation_tick(); // animation-tick()\n'
+        self.refused({**good_files(), "extra.txt": source * 2}, pattern="animation-tick")
 
     def test_manifest_parsed_once(self):
         z = make_zip(self.tmp / "g.zip", good_files())
@@ -279,8 +277,11 @@ class Index(unittest.TestCase):
                 self.assertIn("origin/main:store/index.json", err.getvalue())
 
     def test_absent_previous_index_is_allowed(self):
-        with mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(returncode=128)):
+        absent = "fatal: path 'store/index.json' does not exist in 'origin/main'"
+        with mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(returncode=128, stderr=absent)):
             self.assertIsNone(ci.previous_index())
+        with mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(returncode=128, stderr="fatal: bad revision")):
+            self.assertRaises(ValueError, ci.previous_index)
 
     def test_previous_index_is_used(self):
         previous = {"seq": 999, "themes": [], "plugins": []}
@@ -348,6 +349,8 @@ class PluginDecision(unittest.TestCase):
                 self.assertIn("manifest uses a resource reference; write names literally", cp.decide(PERMS, tree, {})[0])
         tree = MANIFEST.replace('".WeatherService"', '"@string/service"')
         self.assertIn("manifest uses a resource reference; write names literally", cp.decide(PERMS, tree, {})[0])
+        labelled = MANIFEST.replace('    E: application (line=8)\n', '    E: application (line=8)\n      A: http://schemas.android.com/apk/res/android:label(0x01010001)=@0x7f0f0001\n      A: http://schemas.android.com/apk/res/android:icon(0x01010002)=@0x7f0d0001\n')
+        self.assertNotIn("manifest uses a resource reference; write names literally", cp.decide(PERMS, labelled, {})[0])
 
     def test_dynamic_dex_loading_strings(self):
         for name in ("DexClassLoader", "InMemoryDexClassLoader", "DexFile"):

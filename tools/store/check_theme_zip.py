@@ -138,8 +138,7 @@ def check_tree(root, expect_id, manifest):
             if not re.search(rb"<svg\b[^>]*>", p.read_bytes()):
                 raise Refuse(f"{p.name}: not an SVG")
         elif p.suffix.lower() in (".slint", ".txt", ".json"):
-            src = re.sub(r"//[^\n]*|/\*.*?\*/", "", p.read_text("utf-8", "replace"), flags=re.S)
-            ticks += len(re.findall(r"animation[-_]tick\s*\(", src))
+            ticks += len(re.findall(r"animation[-_]tick\s*\(", p.read_text("utf-8", "replace")))
     if ticks > MAX_TICKS:
         raise Refuse(f"{ticks} uses of animation-tick(, more than {MAX_TICKS}")
     return theme_id

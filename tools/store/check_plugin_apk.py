@@ -70,7 +70,7 @@ def decide(perms_out, xmltree_out, blobs):
     perms = set(re.findall(r"^uses-permission[\w-]*: name='([^']+)'", perms_out, re.M))
     perms |= {a.get("name") for t, a, _ in nodes if t.startswith("uses-permission") and a.get("name")}
     problems = [f"requests {p}" for p in sorted(perms & BANNED_PERMS)]
-    if any(v.startswith("@") for _, attrs, _ in nodes for v in attrs.values()):
+    if any(a.get(k, "").startswith("@") for _, a, _ in nodes for k in ("name", "value")):
         problems.append("manifest uses a resource reference; write names literally")
     if any(t == "category" and a.get("name") == HOME for t, a, _ in nodes):
         problems.append("has an activity with category HOME")
