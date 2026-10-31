@@ -81,8 +81,9 @@ class ThemeZip(unittest.TestCase):
         self.refused(f, pattern="preview.png")
 
     def test_reserved_id(self):
-        for i in ("default", "Fallback", "last-resort", "active", "minimal"):
+        for i in ("default", "fallback", "last-resort", "active", "minimal"):
             self.refused(good_files(i), pattern="reserved")
+        self.refused(good_files("Fallback"), pattern="does not match")
 
     def test_malformed_id(self):
         self.refused(good_files("bad id!"), pattern="does not match")
@@ -161,8 +162,9 @@ class Index(unittest.TestCase):
 
     def test_seq_monotonic(self):
         self.assertTrue(self.check(seq=2, previous={"seq": 3}))
-        self.assertEqual(self.check(seq=3, previous={"seq": 3}), [])
-        self.assertEqual(self.check(seq=4, previous={"seq": 3}), [])
+        self.assertEqual(self.check(seq=3, previous={"seq": 3, "themes": [], "plugins": []}), [])
+        self.assertTrue(self.check(seq=3, previous={"seq": 3, "themes": [self.theme()], "plugins": []}))
+        self.assertEqual(self.check(seq=4, previous={"seq": 3, "themes": [self.theme()], "plugins": []}), [])
 
     def test_changed(self):
         old = {"themes": [self.theme()], "plugins": []}

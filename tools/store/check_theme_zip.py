@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SDK = ROOT / "sdk"
 
-ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
+ID_RE = re.compile(r"[a-z0-9-]{1,64}")
 ALWAYS_RESERVED = {"default", "fallback", "last-resort", "active"}
 EXTS = {".slint", ".json", ".png", ".svg", ".ttf", ".otf", ".ttc", ".txt"}
 MAX_FILES = 200
@@ -45,7 +45,7 @@ def reserved_ids():
 
 def check_id(theme_id):
     if not isinstance(theme_id, str) or not ID_RE.fullmatch(theme_id):
-        raise Refuse(f"theme id {theme_id!r} does not match [A-Za-z0-9_-]{{1,64}}")
+        raise Refuse(f"theme id {theme_id!r} does not match [a-z0-9-]{{1,64}}")
     if theme_id.lower() in reserved_ids():
         raise Refuse(f"theme id {theme_id!r} is reserved")
 

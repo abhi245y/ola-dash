@@ -82,6 +82,9 @@ def validate(index, raw_size, previous=None):
         problems.append("seq must be an integer >= 1")
     elif isinstance(previous, dict) and type(previous.get("seq")) is int and seq < previous["seq"]:
         problems.append(f"seq {seq} is lower than origin/main's {previous['seq']}")
+    elif (isinstance(previous, dict) and seq == previous.get("seq")
+          and (index.get("themes"), index.get("plugins")) != (previous.get("themes"), previous.get("plugins"))):
+        problems.append(f"entries changed but seq is still {seq}; raise it")
     for k in ("themes", "plugins"):
         if not isinstance(index.get(k), list):
             problems.append(f"{k} must be an array")

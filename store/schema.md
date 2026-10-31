@@ -8,7 +8,7 @@
 
 | Field | Type | Rule |
 |---|---|---|
-| `seq` | integer >= 1 | Never decreases. `tools/store/check_index.py` compares it with `origin/main`. |
+| `seq` | integer >= 1 | Never decreases, and goes up whenever the themes or plugins change. `tools/store/check_index.py` compares it with `origin/main`. |
 | `themes` | array | Theme entries. |
 | `plugins` | array | Plugin entries. |
 
@@ -18,7 +18,7 @@ Unknown keys are refused (they catch typos).
 
 | Field | Type | Rule |
 |---|---|---|
-| `id` | string | `[A-Za-z0-9_-]{1,64}`, unique in `themes`, equals `id` in the zip's `theme.json`. Reserved (any case): `default`, `fallback`, `last-resort`, `active`, and every folder in this repo's `themes/` (and the SDK's `themes/`). |
+| `id` | string | `[a-z0-9-]{1,64}` (the SDK theme id rule), unique in `themes`, equals `id` in the zip's `theme.json`. Reserved (any case): `default`, `fallback`, `last-resort`, `active`, and every folder in this repo's `themes/` (and the SDK's `themes/`). |
 | `name` | string | Display name. |
 | `version` | string | Display version, e.g. `1.2.0`. |
 | `author` | string | |
