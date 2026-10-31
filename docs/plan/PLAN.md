@@ -208,7 +208,7 @@ PR B (M4):
 ### E3 Theme system v2
 
 **E3.S1 Options and auto night** [SDK] (after E1.S1 PR B)
-- [ ] T1 Theme pane renders controls from `options`; values per theme in `settings.json`; applied live through the `opt-<id>` root properties.
+- [x] T1 (SDK #24) Theme pane renders controls from `options`; values per theme in `settings.json`; applied live through the `opt-<id>` root properties.
 - [ ] T2 Night `auto`: light sensor if present (M-dev), else clock with editable times; falls back to manual when `AUTO_TIME` is off or the year is implausible. Night is optional per theme.
 - AC: changing an option or night updates the theme with no recompile.
 
