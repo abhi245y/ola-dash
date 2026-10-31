@@ -169,10 +169,10 @@ PR B (M4):
 - AC: 30 sim captures (four placements x alerts 1-6, locked, locked-error, cooldown, charge) on the PR; `theme_root.rs` contrast tests pass; passcode behaviour unchanged.
 
 **E1.S3 Host shell** [SDK]
-- [ ] T1 `in property <string> screen: "dash"` on `Host`; screens drawn with `if` between `dash := Dash` and `HostOverlay`, so the lock screen and alerts cover them. Navigation stays in Slint. `screen` resets to `dash` in the same evaluation when `parked` turns false or an alert starts.
-- [ ] T2 Hub button: the strip's end cell, 64 px along the strip by the strip height, never moves or shrinks a telltale; visible only when `parked`, no alert, unlocked, not test mode. Added to the host-owned list in `docs/safety.md`.
-- [ ] T3 Close button on every screen. No apps screen until E2.S2 (no placeholders shown to riders). `host/ui/kit.slint` with only the parts the frame uses (rail row, close button, pane).
-- [ ] T4 `sim --screen settings`.
+- [x] T1 `in property <string> screen: "dash"` on `Host`; screens drawn with `if` between `dash := Dash` and `HostOverlay`, so the lock screen and alerts cover them. Navigation stays in Slint. `screen` resets to `dash` in the same evaluation when `parked` turns false or an alert starts.
+- [x] T2 Hub button: the strip's end cell, 64 px along the strip by the strip height, never moves or shrinks a telltale; visible only when `parked`, no alert, unlocked, not test mode. Added to the host-owned list in `docs/safety.md`.
+- [x] T3 Close button on every screen. No apps screen until E2.S2 (no placeholders shown to riders). `host/ui/kit.slint` with only the parts the frame uses (rail row, close button, pane).
+- [x] T4 `sim --screen settings`.
 - AC: parked, the owner reaches the settings frame from any theme; leaving `parked` closes them in one frame (sim capture pair).
 
 **E1.S4 Settings core** [SDK]
