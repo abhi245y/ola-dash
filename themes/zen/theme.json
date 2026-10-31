@@ -1,0 +1,10 @@
+{
+  "id": "zen",
+  "name": "Zen",
+  "version": "1.0.0",
+  "author": "Ola Dash contributors",
+  "license": "GPL-3.0-or-later",
+  "contract": 7,
+  "entry": "main.slint",
+  "description": "Sunlight-first speed and battery readouts with fixed geometry and matching day and night palettes."
+}
