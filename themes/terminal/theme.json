@@ -1,0 +1,25 @@
+{
+  "id": "terminal",
+  "name": "Terminal",
+  "version": "1.0.0",
+  "author": "Ola Dash contributors",
+  "license": "GPL-3.0-or-later",
+  "contract": 7,
+  "entry": "main.slint",
+  "description": "Fixed-column phosphor telemetry on black with exact block gauges and one blinking prompt cursor.",
+  "options": [
+    {
+      "id": "color",
+      "type": "choice",
+      "values": ["green", "amber", "white"],
+      "default": "green",
+      "label": "Phosphor"
+    },
+    {
+      "id": "scanlines",
+      "type": "bool",
+      "default": false,
+      "label": "Scanlines"
+    }
+  ]
+}

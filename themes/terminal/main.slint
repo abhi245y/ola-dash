@@ -1,0 +1,257 @@
+// Terminal: one fixed character grid below the host's 48 px strip.
+import { Vehicle, Battery, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, LockStyle, LockKeyShape, LockDigits, AlertPosition } from "vehicle.slint";
+import "fonts/IBMPlexMono-Medium.ttf";
+import "fonts/IBMPlexMono-Bold.ttf";
+
+// IBM Plex Mono advances every character by 0.6 em. All gauges have 20 cells.
+// Unknown inputs replace the entire gauge with --, rather than an empty bar.
+component BlockBar inherits Rectangle {
+    in property <float> value;
+    in property <float> maximum: 100;
+    in property <bool> known: true;
+    in property <color> ink;
+    in property <color> dim;
+    in property <length> cell-size: 30px;
+    property <length> cell-width: root.cell-size * 0.6;
+    property <int> filled: round(clamp(root.value / root.maximum, 0, 1) * 20);
+
+    width: root.cell-width * 20;
+    height: root.cell-size * 1.6;
+    background: transparent;
+
+    for cell[i] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] : Text {
+        x: root.cell-width * i;
+        width: root.cell-width;
+        height: parent.height;
+        visible: root.known;
+        text: i < root.filled ? "\u{2588}" : "\u{2591}";
+        color: i < root.filled ? root.ink : root.dim;
+        font-size: root.cell-size;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+    Text {
+        width: parent.width;
+        height: parent.height;
+        visible: !root.known;
+        text: "--";
+        color: root.ink;
+        font-size: root.cell-size;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+}
+
+// 34 columns at 18 px: 5 label cells, 20 gauge cells, 9 value cells.
+// Ungauged values share the same right edge; no state changes row geometry.
+component Readout inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <bool> gauge: false;
+    in property <float> gauge-value;
+    in property <float> gauge-max: 100;
+    in property <bool> known: true;
+    in property <color> ink;
+    in property <color> dim;
+
+    width: 612px;
+    height: 64px;
+    background: transparent;
+
+    Text {
+        x: 0px; y: 0px;
+        width: 90px;
+        height: parent.height;
+        text: root.label;
+        color: root.dim;
+        font-size: 30px;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+    if root.gauge: BlockBar {
+        x: 90px;
+        y: 8px;
+        value: root.gauge-value;
+        maximum: root.gauge-max;
+        known: root.known;
+        ink: root.ink;
+        dim: root.dim;
+    }
+    Text {
+        x: root.gauge ? 450px : 198px; y: 0px;
+        width: root.gauge ? 162px : 414px;
+        height: parent.height;
+        text: root.value;
+        color: root.ink;
+        font-size: 30px;
+        font-weight: 700;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    Rectangle {
+        y: parent.height - 1px;
+        width: parent.width;
+        height: 1px;
+        background: root.dim;
+        opacity: 0.5;
+    }
+}
+
+export component Dash inherits Window {
+    width: 1280px;
+    height: 768px;
+    background: #000000;
+    default-font-family: "IBM Plex Mono";
+
+    in property <string> opt-color: "green";
+    in property <bool> opt-scanlines: false;
+
+    property <color> phosphor: root.opt-color == "amber" ? #ffb000
+        : root.opt-color == "white" ? #e8e8e8 : #33ff66;
+    property <color> dim: root.opt-color == "amber" ? #8a5f00
+        : root.opt-color == "white" ? #7a7a7a : #1f8f3f;
+
+    out property <OverlayPlacement> overlay-placement: OverlayPlacement.top;
+    out property <OverlayStyle> overlay-style: {
+        background: #000000,
+        foreground: root.phosphor,
+        corner-radius: 0px,
+        show-labels: false,
+    };
+    out property <AlertPosition> alert-position: AlertPosition.lower;
+    // Use bright phosphor for host secondary copy too: the dim amber label
+    // colour falls below the host's 4.5:1 requirement for small lock text.
+    out property <LockStyle> lock-style: {
+        background: #000000,
+        foreground: root.phosphor,
+        muted: root.phosphor,
+        accent: root.phosphor,
+        key-background: #000000,
+        key-border: root.dim,
+        key-shape: LockKeyShape.grid,
+        digits: LockDigits.sans,
+    };
+
+    // A charger session keeps the parked presentation. Only the host light
+    // identifies the session; battery data is never repeated in the hero.
+    property <bool> parked: Vehicle.charging || Vehicle.state == VehicleState.charging
+        || Vehicle.state == VehicleState.park || Vehicle.mode == DriveMode.park;
+
+    // The hero is always speed; MODE carries P / REVERSE (one fact once).
+    property <string> hero-text: Vehicle.speed-kmh < 0 ? "--" : "" + round(Vehicle.speed-kmh);
+    property <string> mode-text: root.parked ? "P"
+        : Vehicle.mode == DriveMode.eco ? "ECO"
+        : Vehicle.mode == DriveMode.normal ? "NORMAL"
+        : Vehicle.mode == DriveMode.sport ? "SPORT"
+        : Vehicle.mode == DriveMode.hyper ? "HYPER"
+        : Vehicle.mode == DriveMode.custom ? "CUSTOM"
+        : Vehicle.mode == DriveMode.reverse ? "REVERSE"
+        : Vehicle.mode == DriveMode.easy-park ? "EASY PARK" : "--";
+
+    // Prefer fine SOC when reported, with the rounded Vehicle value as fallback.
+    property <float> soc: Battery.soc-pct >= 0 ? Battery.soc-pct : Vehicle.battery-pct;
+    property <string> soc-text: root.soc < 0 ? "-- %" : round(root.soc) + " %";
+
+    // Contract current is negative during discharge. Positive kW means draw;
+    // negative kW means energy returning to the pack. -1 A is a valid current.
+    property <bool> power-known: Battery.voltage-v >= 0;
+    property <float> power-kw: root.power-known ? -Battery.current-a * Battery.voltage-v / 1000 : 0;
+    property <int> power-tenths: round(abs(root.power-kw) * 10);
+    property <string> power-text: !root.power-known ? "-- kW"
+        : (root.power-kw < 0 && root.power-tenths > 0 ? "-" : "")
+            + floor(root.power-tenths / 10) + "." + Math.mod(root.power-tenths, 10) + " kW";
+    // Gauge magnitude saturates at 6 kW; the signed numeric reading stays exact
+    // to one decimal. Fill uses the raw magnitude, not the rounded display.
+
+    property <int> trip-tenths: round(Vehicle.trip-km * 10);
+    property <string> trip-text: Vehicle.trip-km < 0 ? "-- km"
+        : floor(root.trip-tenths / 10) + "." + Math.mod(root.trip-tenths, 10) + " km";
+
+    // One animation clock for one cursor. Readings have no easing or timers.
+    property <bool> cursor-on: Math.mod(animation-tick() / 500ms, 2) < 1;
+
+    Text {
+        x: 32px; y: 148px; width: 552px; height: 48px;
+        text: "SPD";
+        color: root.dim;
+        font-size: 30px;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+    Text {
+        x: 32px; y: 196px; width: 552px; height: 296px;
+        text: root.hero-text;
+        color: root.phosphor;
+        font-size: 280px;
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+    Text {
+        x: 32px; y: 492px; width: 552px; height: 40px;
+        text: "km/h";
+        color: root.dim;
+        font-size: 28px;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+    BlockBar {
+        x: 32px; y: 588px;
+        cell-size: 44px;
+        value: Vehicle.speed-kmh;
+        maximum: 120;
+        known: Vehicle.speed-kmh >= 0;
+        ink: root.phosphor;
+        dim: root.dim;
+    }
+
+    // Eight rows, 72 px pitch, one shared right edge at x = 1248.
+    for row[i] in [
+        { label: "BAT", value: root.soc-text, gauge: true, amount: root.soc, maximum: 100.0, known: root.soc >= 0 },
+        { label: "RNG", value: Vehicle.range-km < 0 ? "-- km" : Vehicle.range-km + " km", gauge: false, amount: 0.0, maximum: 100.0, known: true },
+        { label: "MODE", value: root.mode-text, gauge: false, amount: 0.0, maximum: 100.0, known: true },
+        { label: "PWR", value: root.power-text, gauge: true, amount: abs(root.power-kw), maximum: 6.0, known: root.power-known },
+        { label: "PACK", value: Battery.temp-max-c == -1 ? "-- \u{00B0}C" : round(Battery.temp-max-c) + " \u{00B0}C", gauge: false, amount: 0.0, maximum: 100.0, known: true },
+        { label: "TRIP", value: root.trip-text, gauge: false, amount: 0.0, maximum: 100.0, known: true },
+        { label: "ODO", value: Vehicle.odometer-km < 0 ? "-- km" : round(Vehicle.odometer-km) + " km", gauge: false, amount: 0.0, maximum: 100.0, known: true },
+        { label: "TIME", value: Vehicle.clock-text == "" ? "--" : Vehicle.clock-text, gauge: false, amount: 0.0, maximum: 100.0, known: true },
+    ] : Readout {
+        x: 636px;
+        y: 84px + i * 72px;
+        label: row.label;
+        value: row.value;
+        gauge: row.gauge;
+        gauge-value: row.amount;
+        gauge-max: row.maximum;
+        known: row.known;
+        ink: root.phosphor;
+        dim: root.dim;
+    }
+
+    Rectangle {
+        x: 32px; y: 680px; width: 1216px; height: 1px;
+        background: root.dim;
+    }
+    prompt := Text {
+        x: 32px; y: 696px; height: 48px;
+        text: ">";
+        color: root.phosphor;
+        font-size: 32px;
+        font-weight: 500;
+        vertical-alignment: center;
+    }
+    Rectangle {
+        x: prompt.x + prompt.preferred-width + 12px;
+        y: 703px; width: 19.2px; height: 34px;
+        background: root.phosphor;
+        visible: root.cursor-on;
+    }
+
+    // One cached SVG pattern, instantiated only when enabled. No scan animation.
+    if root.opt-scanlines: Image {
+        x: 0px; y: 48px; width: 1280px; height: 720px;
+        source: @image-url("scanlines.svg");
+    }
+    // Vehicle.data-stale and Display.night deliberately do not alter the face:
+    // the host owns the NO DATA badge; this palette is the same day and night.
+}
