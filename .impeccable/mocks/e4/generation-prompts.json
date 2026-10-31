@@ -1,0 +1,78 @@
+{
+  "destination": "/home/arl/Documents/code/ola-re/ola-dash/.impeccable/mocks/e4",
+  "mode": "built-in image_gen",
+  "common": "Use case: ui-mockup. Generate one finished electric-scooter head-unit screen concept. EXACT image canvas 1280 x 768 pixels, landscape 5:3, edge-to-edge UI, no device frame, no brand marks, no perspective, no outside margins or title. Crisp readable typography and flat implementable vector geometry.\nTOP HOST STRIP: exactly y=0 through y=47, a 48 px high thin very dark band, only 6.25% of total height. DO NOT enlarge this band. Nothing in it except exactly nine small scooter warning lights, left-to-right: left-turn arrow, right-turn arrow, high-beam icon, headlight icon, READY text, padlock icon, side-stand icon, fault icon, charging/battery-lightning icon; then a small solid yellow square hub button at far right. Compact lights about 20px tall centred vertically in strip. No numeric readouts, clock, headings, mode, separators, app nav, extra lights or labels in strip. Unlit lights are faint neutral outlines. Indicators and READY when lit are green; high beam blue; side stand amber; fault red; headlight, lock and charging when lit solid white. Strip must look identical in height and geometry in all concepts.\nAll theme content starts at y=48. Each fact displayed only once, with no repeated summary cards. Numerical scale labels allowed, but no duplicated telemetry values. Exact riding facts speed 42 km/h; mode Sport; battery 68 %; range 54 km; trip 12.4 km; odometer 3,218 km; clock 18:24; battery current 38 A at 52 V, power 2.0 kW; pack temperature 31 C; motor temperature 48 C. Parked exceptions: speed 0 km/h, mode P, Charging; other included facts unchanged. Zen only includes speed and battery, intentionally omit other facts.\nNo invented numbers, decorative fake text, gradients, bloom, glow, bevels, chrome, photorealistic reflections or dimensional objects. All graphics drawable in Slint with paths, strokes, arcs, text and sin/cos.",
+  "themes": {
+    "twin": "Theme Twin Dial / Instrument. Deep blue-black #0B0E13 flat glass ground, very subtle depth. Precision condensed technical sans with tabular figures, crisp white text, engraved fine but visible scales and tick marks. One warm copper-orange accent #FF7A1A for needles and focus, clearly distinct from amber warning. Cool regen arc must be neutral slate-silver, not status blue or green. Solid surfaces and strong strokes for sunlight.\nLarge analog speedometer left half, range 0 to 120 km/h, major labels 0,20,40,60,80,100,120 in accurate order around calibrated arc. Huge digital speed centred inside. Power/regen dial right half, calibrated minus 3 kW to plus 6 kW, readable scale minus3,0,3,6, digital power 2.0 kW once inside. Two smaller inset dials between/below large dials: battery 68 % once and pack temp 31 C once; no redundant ticks labelled 68 or31. Small well-spaced support readouts for 38 A, 52 V, MOTOR 48 C, ODO 3,218 km. One slim bottom theme line with mode, RANGE 54 km, TRIP 12.4 km, clock 18:24, all readable. Keep content inside 720px tall theme body. No repeated header facts.",
+    "terminal": "Theme Terminal. Pure black body. Exactly one monospace font throughout, phosphor-green #33FF66 text and dim green labels; no other BODY colours. This explicit green theme law overrides shared status-colour exclusivity. No glow. Very faint horizontal scanlines only. System-monitor rows SPD, BAT, RNG, MODE, PWR, TEMP, TRIP, ODO, TIME with values right-aligned into fixed columns. ASCII block-character bar gauges for speed, battery and power. Hero speed is only speed readout, giant monospace digits about 190 px tall (quarter screen); unit km/h next to it, SPD label. BAT row 68 % with block gauge filled68%; RNG54km; MODE Sport or P; PWR2.0kW with 38A and52V once; TEMP PACK31C MOTOR48C; TRIP12.4km; ODO3,218km; TIME18:24. Do not duplicate digits in gauge endpoints. Smaller rows still large enough to read at glance. Bottom prompt line one block cursor only.",
+    "zen": "Theme Zen. Bright sunlight clarity: solid warm off-white #F4F1EA body, near-black #111111 ink. One quiet accent deep teal #0F6E6E ONLY for battery bar. Exactly TWO facts in body: speed and battery. Enormous centred near-black speed digits about 460px tall (60 percent of screen height), generous negative space, small km/h beside. Single thick horizontal battery gauge along bottom third, 68 percent filled in deep teal and remaining32percent neutral muted track, text \"68 %\" at its end, appearing once. No other text, labels, range, clock, power, mode, temperature, decoration, tick numbers or gradients. Generous margins, exact alignment. Top dark48px host strip remains thin; do not extend black header into cream content."
+  },
+  "images": [
+    {
+      "file": "twin-ride.png",
+      "theme": "twin",
+      "scene": "RIDING. Speed digital42 and speed needle accurately at42; power needle at plus2.0kW. Mode SPORT. Top strip ONLY left indicator, READY, headlight lit; all other lights unlit outlines.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-4a30e818-f5b1-493d-aaf3-a3ac5633d18f.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-bb145399-fa83-4d3c-b227-d230f694a0e5.png",
+      "correction": "Correct missing telemetry and false warning. High-beam icon currently blue: turn it OFF faint gray outline; only left indicator READY headlight lit. Add missing ODO 3,218 km exactly once, in bottom/support area without hiding any existing values. Speed needle must align42 (just above40) not near50; power needle at2 on0..3 arc. Keep both dials, all current included factual values, and style."
+    },
+    {
+      "file": "twin-park.png",
+      "theme": "twin",
+      "scene": "PARKED AND CHARGING. Speed digital0, speed needle accurately at0. Power dial charging needle in neutral cool regen-side colour at minus2 on calibrated scale, with 'Charging' label and2.0kW magnitude once. Battery68% rising represented by short upward arrow, no extra percentage or ghost values. Mode P. Top strip ONLY charging and lock lit, all other lights unlit outlines. Current38A at52V, pack31C motor48C range54km trip12.4km ODO3,218km time18:24 unchanged.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-e097a320-4e32-479c-ad85-83ca78b711d5.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-41e6435c-c0b9-4bbc-8be8-1fc3476b1bbe.png",
+      "correction": "Correct false warning lights: highbeam, sidestand, fault MUST ALL BE OFF neutral faint gray outlines, not blue amber red. Only lock andcharging litwhite. Speedometer missing connected pointer: create orange needle from speed dial centre hub all way toward0 tick at lowerleft. Keep0 digital once and powerCharging2.0kW, all other included data unchanged."
+    },
+    {
+      "file": "term-ride.png",
+      "theme": "terminal",
+      "scene": "RIDING. Hero SPD42km/h, MODE Sport; PWR2.0kW plus38A at52V. Bottom prompt '> riding' and one block cursor. Top strip ONLY left indicator, READY and headlight lit; other lights faint unlit outlines.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-28fce763-2594-47f2-aa91-7d018a9f16a6.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-66472579-9ed7-44fd-a695-c881975dc3d9.png",
+      "correction": "Turn false red fault OFF faint gray neutral outline. Only left indicator READY headlight lit. Add missing ASCII block-character speed gauge below speed unit, no new numbers; fill35% because42of120. Power gauge must be33.3% fill because2of6, battery68% fill, keep all readouts unchanged and once. Avoid pixel-stepped speed numeral; make smoothly rendered monospace for easy reading, about quarter-screen height."
+    },
+    {
+      "file": "term-park.png",
+      "theme": "terminal",
+      "scene": "PARKED AND CHARGING. Hero SPD0km/h, MODE P. PWR row shows CHG and charging block bar,2.0kW,38A at52V once. Bottom prompt exactly '> parked, charging' and one block cursor. All other listed readout values unchanged. Top strip ONLY charging and lock lit, others unlit outlines.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-3069de3a-13e9-4c14-ba07-fce00b555526.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-4534e2bc-c28e-42ec-8f9b-b73b0f51af2e.png",
+      "correction": "Maintain all exact values, only charging and lockwhite lit, no other lit light. Make SPD0 smoothly rendered monospace rather than pixel-stepped. Empty ASCII speed gauge under speed, no new numeric labels. Battery gauge68% fill; CHG gauge33.3% fill, magnitude2.0kW unchanged. Keep1font, no extra facts."
+    },
+    {
+      "file": "zen-ride.png",
+      "theme": "zen",
+      "scene": "RIDING at42. Only body text '42', 'km/h', '68 %'. Top strip ONLY left indicator, READY, headlight lit; other lights unlit outlines.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-c3cfd8be-0713-4301-8f2e-44704c19b61c.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-6846740d-5b32-45f2-a48f-1ed95ed5f7e2.png",
+      "correction": "Battery currently looks70%: correct bar length to exactly68% of track, remaining32% neutral. Keep body only42 km/h and68%. Remove all surface gradients and texture, use exact solid offwhite#F4F1EA, ink#111111, battery accent#0F6E6E. Keep layout."
+    },
+    {
+      "file": "zen-park.png",
+      "theme": "zen",
+      "scene": "PARKED AND CHARGING. Only body text '0', 'km/h', '68 %'. No extra charging text in body because strip already communicates it. Top strip ONLY charging and lock lit, others unlit outlines.",
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-8388b550-8ae4-4fd7-b9a2-60b3b37608ea.png",
+      "initialSource": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-2b617356-7e8e-4747-bf56-252d2ddc7f13.png",
+      "correction": "Battery bar must be exactly68% filled and32% neutral. Body only0 km/h and68%. Exact solid offwhite#F4F1EA, ink#111111, teal#0F6E6E, no gradients or texture. Only lockcharging litwhite in strip; everything else off faintgray. Keep layout."
+    }
+  ],
+  "host": {
+    "ride": {
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-6846740d-5b32-45f2-a48f-1ed95ed5f7e2.png",
+      "height": 86
+    },
+    "park": {
+      "source": "/home/arl/.codex/generated_images/01a193b0-3f0e-7a81-aa6c-9748ae2e4761/exec-4534e2bc-c28e-42ec-8f9b-b73b0f51af2e.png",
+      "height": 83
+    }
+  },
+  "bodyTop": {
+    "twin-ride.png": 75,
+    "twin-park.png": 61,
+    "term-ride.png": 84,
+    "term-park.png": 66,
+    "zen-ride.png": 78,
+    "zen-park.png": 76
+  }
+}

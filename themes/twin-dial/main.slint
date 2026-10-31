@@ -1,0 +1,240 @@
+import { Vehicle, Battery, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, AlertPosition, LockStyle, LockKeyShape, LockDigits } from "vehicle.slint";
+import { InstrumentArc, InstrumentTick, InstrumentFace, InstrumentNeedle, InstrumentHub, SmallInstrument } from "instruments.slint";
+import "fonts/NotoSans-SemiCondensed.ttf";
+import "fonts/NotoSans-SemiCondensedBold.ttf";
+
+export component Dash inherits Window {
+    width: 1280px;
+    height: 768px;
+    background: #0b0e13;
+    default-font-family: "Noto Sans SemiCondensed";
+
+    in property <color> opt-accent: #ff7a1a;
+    in property <string> opt-needle: "thin";
+    in property <bool> opt-digital-speed: true;
+    in property <bool> opt-power-bar: false;
+
+    out property <OverlayPlacement> overlay-placement: OverlayPlacement.top;
+    out property <OverlayStyle> overlay-style: {
+        background: #0b0e13,
+        foreground: #ffffff,
+        corner-radius: 0px,
+        show-labels: false,
+    };
+    // Keep the speed readout and bottom telemetry clear of an upper alert card.
+    out property <AlertPosition> alert-position: AlertPosition.upper;
+    out property <LockStyle> lock-style: {
+        background: #0b0e13,
+        foreground: #ffffff,
+        muted: #adb9c7,
+        accent: #dce4ed,
+        key-background: #111720,
+        key-border: #344353,
+        key-shape: LockKeyShape.square,
+        digits: LockDigits.sans,
+    };
+
+    property <bool> charge-view: Vehicle.charging || Vehicle.state == VehicleState.charging;
+    property <bool> stationary: charge-view || Vehicle.state == VehicleState.park || Vehicle.mode == DriveMode.park;
+    property <float> speed-value: stationary ? 0 : Vehicle.speed-kmh;
+    property <float> speed-angle: 150 + 240 * clamp(speed-value / 120, 0, 1);
+
+    // Negative current is discharge, not an unknown marker. Positive screen power
+    // is drive; negative screen power is energy returning to the pack.
+    property <bool> power-known: Battery.voltage-v >= 0;
+    property <float> signed-power: -Battery.current-a * Battery.voltage-v / 1000;
+    property <float> power-kw: signed-power;
+    property <float> power-clamped: clamp(power-kw, -3, 6);
+    // Each side gets 135 degrees: 45 deg/kW for regen, 22.5 deg/kW for drive.
+    property <float> power-angle: 270 + (power-clamped < 0 ? 45 * power-clamped : 22.5 * power-clamped);
+    property <int> power-tenths: round(abs(power-kw) * 10);
+    property <string> power-text: !power-known ? "--"
+        : (power-kw < 0 && power-tenths > 0 ? "-" : "")
+            + floor(power-tenths / 10) + "." + Math.mod(power-tenths, 10);
+    property <color> power-ink: power-kw < 0 ? #7fa7c9 : root.opt-accent;
+
+    // Prefer fine SOC, falling back to the rounded vehicle reading.
+    property <float> battery-value: Battery.soc-pct >= 0 ? Battery.soc-pct : Vehicle.battery-pct;
+    property <bool> battery-known: battery-value >= 0;
+    // Use the hottest reported cell, with the minimum as fallback if it is all we have.
+    property <float> pack-value: Battery.temp-max-c == -1 ? Battery.temp-min-c
+        : Battery.temp-min-c == -1 ? Battery.temp-max-c
+        : max(Battery.temp-max-c, Battery.temp-min-c);
+    property <bool> pack-known: pack-value != -1;
+    property <int> trip-tenths: round(max(0, Vehicle.trip-km) * 10);
+    property <string> trip-text: Vehicle.trip-km < 0 ? "--"
+        : floor(trip-tenths / 10) + "." + Math.mod(trip-tenths, 10);
+    property <string> mode-text: stationary ? "P"
+        : Vehicle.mode == DriveMode.reverse ? "R"
+        : Vehicle.mode == DriveMode.easy-park ? "EASY PARK"
+        : Vehicle.mode == DriveMode.eco ? "ECO"
+        : Vehicle.mode == DriveMode.normal ? "NORMAL"
+        : Vehicle.mode == DriveMode.sport ? "SPORT"
+        : Vehicle.mode == DriveMode.hyper ? "HYPER"
+        : Vehicle.mode == DriveMode.custom ? "CUSTOM" : "--";
+
+    // No theme content in the host's top 48 px. Stale data keeps its last known
+    // reading: the host supplies the NO DATA badge, once, above this surface.
+
+    // Speed: centre (326, 332), 0..120 over 240 degrees. The lower opening
+    // keeps both endpoint needles clear of the digital speed below the hub.
+    InstrumentFace { cx: 326; cy: 332; radius: 260; }
+    InstrumentArc { cx: 326; cy: 332; radius: 173; start: 150; sweep: 240; stroke: #253140; stroke-width: 1px; }
+    for value in [0, 20, 40, 60, 80, 100, 120] : InstrumentTick {
+        cx: 326; cy: 332; radius: 246; angle: 150 + 240 * value / 120;
+        tick-length: 23; stroke-width: 3px;
+    }
+    for value in [10, 30, 50, 70, 90, 110] : InstrumentTick {
+        cx: 326; cy: 332; radius: 246; angle: 150 + 240 * value / 120;
+        tick-length: 11; stroke: #a1afbf; stroke-width: 2px;
+    }
+    for value in [0, 20, 40, 60, 80, 100, 120] : Text {
+        x: 326px + 202px * Math.cos((150 + 240 * value / 120) * 1deg) - 38px;
+        y: 332px + 202px * Math.sin((150 + 240 * value / 120) * 1deg) - 25px;
+        width: 76px; height: 50px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: value; color: #ffffff; font-size: 36px; font-weight: 700;
+    }
+    InstrumentNeedle {
+        // Tip stops at the inner hairline (r 173), clear of the numerals.
+        cx: 326; cy: 332; radius: 172; angle: root.speed-angle;
+        ink: root.opt-accent; bold: root.opt-needle == "bold";
+    }
+    InstrumentHub { cx: 326; cy: 332; }
+    Text {
+        x: 211px; y: 368px; width: 230px; height: 138px;
+        horizontal-alignment: center; vertical-alignment: center;
+        visible: root.opt-digital-speed;
+        text: "" + round(root.speed-value);
+        color: #ffffff; font-size: 124px; font-weight: 700; letter-spacing: -3px;
+    }
+    Text {
+        x: 226px; y: 501px; width: 200px; height: 38px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: "km/h"; color: #adb9c7; font-size: 28px;
+    }
+
+    if !root.opt-power-bar : Rectangle {
+        x: 0px; y: 0px; width: 1280px; height: 768px;
+        background: transparent;
+        InstrumentFace { cx: 954; cy: 332; radius: 260; }
+        InstrumentArc { cx: 954; cy: 332; radius: 173; stroke: #253140; stroke-width: 1px; }
+        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 135; sweep: 135; stroke: #7fa7c9; stroke-width: 3px; }
+        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 270; sweep: 135; stroke: #adb9c7; stroke-width: 2px; }
+        for value in [-3, -2, -1, 0, 2, 4, 6] : InstrumentTick {
+            cx: 954; cy: 332; radius: 246;
+            angle: 270 + (value < 0 ? 45 * value : 22.5 * value);
+            tick-length: 23; stroke: value < 0 ? #7fa7c9 : #dce4ed;
+        }
+        for value in [-2.5, -1.5, -0.5, 1, 3, 5] : InstrumentTick {
+            cx: 954; cy: 332; radius: 246;
+            angle: 270 + (value < 0 ? 45 * value : 22.5 * value);
+            tick-length: 11; stroke: value < 0 ? #7fa7c9 : #a1afbf; stroke-width: 2px;
+        }
+        for value in [-3, -2, -1, 0, 2, 4, 6] : Text {
+            x: 954px + 202px * Math.cos((270 + (value < 0 ? 45 * value : 22.5 * value)) * 1deg) - 38px;
+            y: 332px + 202px * Math.sin((270 + (value < 0 ? 45 * value : 22.5 * value)) * 1deg) - 25px;
+            width: 76px; height: 50px;
+            horizontal-alignment: center; vertical-alignment: center;
+            text: value; color: value < 0 ? #7fa7c9 : #ffffff;
+            font-size: 34px; font-weight: 700;
+        }
+        InstrumentNeedle {
+            cx: 954; cy: 332; radius: 172; angle: root.power-angle;
+            ink: root.power-ink; bold: root.opt-needle == "bold";
+            visible: root.power-known;
+        }
+        InstrumentHub { cx: 954; cy: 332; }
+    }
+
+    // Same signed domain in bar mode: -3 at x690, zero at x863 1/3, +6 at x1210.
+    if root.opt-power-bar : Rectangle {
+        x: 0px; y: 0px; width: 1280px; height: 768px;
+        background: transparent;
+        Rectangle { x: 690px; y: 282px; width: 520px; height: 22px; background: #253140; }
+        Rectangle { x: 690px; y: 282px; width: 520px / 3; height: 22px; background: #7fa7c9; opacity: 0.25; }
+        Rectangle {
+            x: 690px + (3 + min(0, root.power-clamped)) * 520px / 9;
+            y: 282px; width: abs(root.power-clamped) * 520px / 9; height: 22px;
+            visible: root.power-known;
+            background: root.power-kw < 0 ? #7fa7c9 : #dce4ed;
+        }
+        for value in [-3, 0, 3, 6] : Rectangle {
+            x: 690px + (value + 3) * 520px / 9 - 1px;
+            y: 274px; width: 2px; height: 38px; background: #adb9c7;
+        }
+        for value in [-3, 0, 3, 6] : Text {
+            x: 690px + (value + 3) * 520px / 9 - 28px;
+            y: 326px; width: 56px; height: 40px;
+            horizontal-alignment: center; vertical-alignment: center;
+            text: value; color: value < 0 ? #7fa7c9 : #ffffff; font-size: 28px; font-weight: 700;
+        }
+        InstrumentNeedle {
+            cx: 690 + (root.power-clamped + 3) * 520 / 9; cy: 293;
+            radius: 25; angle: 270; visible: root.power-known;
+            ink: root.power-ink; bold: root.opt-needle == "bold";
+        }
+    }
+
+    Text {
+        x: 814px; y: 384px; width: 280px; height: 110px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: root.power-text; color: root.power-known && root.power-kw < 0 ? #7fa7c9 : #ffffff;
+        font-size: 82px; font-weight: 700; letter-spacing: -2px;
+    }
+    Text {
+        x: 874px; y: 493px; width: 160px; height: 40px;
+        horizontal-alignment: center; vertical-alignment: center;
+        text: "kW"; color: #adb9c7; font-size: 28px;
+    }
+
+    // Solid small faces overlap the large rims, as on the approved instrument board.
+    SmallInstrument {
+        cx: 514; label: "BATTERY"; maximum: "";
+        known: root.battery-known; fraction: root.battery-value / 100;
+        value: root.battery-known ? round(root.battery-value) + " %" : "--";
+    }
+    SmallInstrument {
+        cx: 766; label: "PACK"; maximum: "60";
+        known: root.pack-known; fraction: root.pack-value / 60;
+        value: root.pack-known ? round(root.pack-value) + " \u{00B0}C" : "--";
+    }
+
+    // One flat telemetry line. Copper never carries mode or status meaning.
+    Rectangle { x: 32px; y: 694px; width: 1216px; height: 1px; background: #344353; }
+    for divider in [296, 666, 1038] : Rectangle {
+        x: divider * 1px; y: 711px; width: 1px; height: 38px; background: #344353;
+    }
+    Text {
+        x: 42px; y: 705px; width: 238px; height: 52px;
+        vertical-alignment: center;
+        text: root.mode-text; color: #ffffff; font-size: 32px; font-weight: 700;
+    }
+    Text {
+        x: 326px; y: 705px; width: 102px; height: 52px;
+        vertical-alignment: center;
+        text: "RANGE"; color: #adb9c7; font-size: 24px;
+    }
+    Text {
+        x: 434px; y: 705px; width: 212px; height: 52px;
+        vertical-alignment: center;
+        text: (Vehicle.range-km < 0 ? "--" : "" + Vehicle.range-km) + " km";
+        color: #ffffff; font-size: 32px; font-weight: 700;
+    }
+    Text {
+        x: 696px; y: 705px; width: 84px; height: 52px;
+        vertical-alignment: center;
+        text: "TRIP"; color: #adb9c7; font-size: 24px;
+    }
+    Text {
+        x: 786px; y: 705px; width: 232px; height: 52px;
+        vertical-alignment: center;
+        text: root.trip-text + " km"; color: #ffffff; font-size: 32px; font-weight: 700;
+    }
+    Text {
+        x: 1058px; y: 705px; width: 180px; height: 52px;
+        horizontal-alignment: right; vertical-alignment: center;
+        text: Vehicle.clock-text == "" ? "--" : Vehicle.clock-text;
+        color: #ffffff; font-size: 32px; font-weight: 700;
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "twin-dial",
+  "name": "Twin Dial",
+  "version": "1.0.0",
+  "author": "Ola Dash contributors",
+  "license": "GPL-3.0-or-later",
+  "contract": 7,
+  "entry": "main.slint",
+  "description": "Precision twin instruments with copper needles, signed power and regen, and small battery and pack temperature dials.",
+  "options": [
+    { "id": "accent", "type": "color", "default": "#ff7a1a", "label": "Needle colour" },
+    { "id": "needle", "type": "choice", "values": ["thin", "bold"], "default": "thin", "label": "Needle" },
+    { "id": "digital-speed", "type": "bool", "default": true, "label": "Digital speed" },
+    { "id": "power-bar", "type": "bool", "default": false, "label": "Power as bar" }
+  ]
+}
