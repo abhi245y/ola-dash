@@ -14,6 +14,7 @@ jobs:
   store:
     name: Index and submissions
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
@@ -55,14 +56,14 @@ jobs:
         if: steps.changed.outputs.themes == 'true' || steps.changed.outputs.plugins == 'true'
         run: |
           set -euo pipefail
-          export PATH="$ANDROID_HOME/build-tools/34.0.0:$PATH"
+          export PATH="${ANDROID_HOME:-}/build-tools/34.0.0:$PATH"
           mkdir -p dl out
           while read -r e; do
             kind=$(jq -r .kind <<<"$e"); url=$(jq -r .url <<<"$e")
             size=$(jq -r .size <<<"$e"); sha=$(jq -r .sha256 <<<"$e")
             f="dl/$(jq -r '.id // .package' <<<"$e").$([ "$kind" = theme ] && echo zip || echo apk)"
             echo "== $kind $url"
-            curl -fsSL --proto '=https' --proto-redir '=https' --max-filesize 52428800 -o "$f" "$url"
+            curl -fsSL --max-time 300 --proto '=https' --proto-redir '=https' --max-filesize "$size" -o "$f" "$url"
             [ "$(stat -c %s "$f")" = "$size" ] || { echo "error: $f is $(stat -c %s "$f") bytes, index says $size" >&2; exit 1; }
             [ "$(sha256sum "$f" | cut -d' ' -f1)" = "$sha" ] || { echo "error: sha256 of $f differs from the index" >&2; exit 1; }
             if [ "$kind" = theme ]; then

@@ -2,6 +2,7 @@ import io
 import json
 import stat
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -44,8 +45,8 @@ class ThemeZip(unittest.TestCase):
         dest = self.tmp / "d"
         dest.mkdir(exist_ok=True)
         with mock.patch.object(ct, "run") as run, self.assertRaisesRegex(ct.Refuse, pattern):
-            ct.unpack(z, dest)
-            ct.check_tree(dest, None)
+            manifest = ct.unpack(z, dest)
+            ct.check_tree(dest, None, manifest)
         run.assert_not_called()
 
     def test_zip_slip(self):
@@ -73,7 +74,53 @@ class ThemeZip(unittest.TestCase):
         self.refused({**good_files(), "bg.png": png(4096, 10)}, pattern="over 2048")
 
     def test_big_svg(self):
-        self.refused({**good_files(), "a.svg": '<svg width="3000px" height="10"></svg>'}, pattern="over 2048")
+        self.refused({**good_files(), "a.svg": b"<svg>" + b" " * (256 * 1024) + b"</svg>"}, pattern="SVG")
+
+    def test_svg_dimensions_are_not_limited(self):
+        for svg in ('<svg width="3000px" height="10"></svg>', '<svg viewBox="0 0 5000 5000"></svg>'):
+            with self.subTest(svg=svg):
+                z = make_zip(self.tmp / "g.zip", {**good_files(), "a.svg": svg})
+                with mock.patch.object(ct, "sim_checks"):
+                    self.assertEqual(ct.main([str(z)]), 0)
+
+    def test_svg_size_boundary(self):
+        svg = b"<svg>" + b" " * (256 * 1024 - 11) + b"</svg>"
+        z = make_zip(self.tmp / "g.zip", {**good_files(), "a.svg": svg})
+        with mock.patch.object(ct, "sim_checks"):
+            self.assertEqual(ct.main([str(z)]), 0)
+
+    def test_svg_bad_header(self):
+        self.refused({**good_files(), "bad.svg": "not svg"}, pattern="not an SVG")
+
+    def test_png_pixel_budget(self):
+        self.refused({**good_files(), **{f"{i}.png": png(2048, 2048) for i in range(4)}}, pattern="pixels")
+
+    def test_png_pixel_budget_boundary(self):
+        files = {**good_files(), "preview.png": png(2000, 2000),
+                 **{f"{i}.png": png(2000, 2000) for i in range(3)}}
+        z = make_zip(self.tmp / "g.zip", files)
+        with mock.patch.object(ct, "sim_checks"):
+            self.assertEqual(ct.main([str(z)]), 0)
+        self.refused({**files, "extra.png": png(1, 1)}, pattern="pixels")
+
+    def test_png_bad_header(self):
+        self.refused({**good_files(), "bad.png": b"not png"}, pattern="bad header")
+        self.refused({**good_files(), "bad.png": png()[:16]}, pattern="bad header")
+
+    def test_unsupported_compression(self):
+        for compression in (zipfile.ZIP_BZIP2, zipfile.ZIP_LZMA):
+            with self.subTest(compression=compression):
+                info = zipfile.ZipInfo("extra.txt")
+                info.compress_type = compression
+                self.refused(good_files(), [(info, b"x")], pattern="compression")
+
+    def test_control_characters(self):
+        for char in ("\x01", "\t", "\n", "\x7f", "\x85"):
+            with self.subTest(char=char):
+                self.refused({**good_files(), f"bad{char}.txt": "x"}, pattern="unsafe path")
+
+    def test_case_duplicate_names(self):
+        self.refused({**good_files(), "PREVIEW.PNG": png()}, pattern="duplicate")
 
     def test_missing_preview(self):
         f = good_files()
@@ -92,6 +139,41 @@ class ThemeZip(unittest.TestCase):
     def test_animation_tick(self):
         slint = "export component Main { x: animation-tick() * 1; y: animation-tick(); z: animation-tick(); w: animation-tick(); }"
         self.refused({**good_files(), "main.slint": slint}, pattern="animation-tick")
+
+    def test_animation_tick_spellings_and_extensions(self):
+        for ext in ("slint", "txt", "json"):
+            for call in ("animation_tick()", "animation-tick ()", "animation_tick\n("):
+                with self.subTest(ext=ext, call=call):
+                    self.refused({**good_files(), f"extra.{ext}": call * 4}, pattern="animation-tick")
+
+    def test_animation_tick_total_across_files(self):
+        self.refused({**good_files(), "a.txt": "animation_tick()" * 2,
+                      "b.json": "animation-tick ()" * 2}, pattern="animation-tick")
+
+    def test_animation_tick_comments(self):
+        source = "// animation-tick()\n/* animation_tick()\nanimation-tick() */\nanimation_tick()" * 3
+        z = make_zip(self.tmp / "g.zip", {**good_files(), "extra.txt": source})
+        with mock.patch.object(ct, "sim_checks"):
+            self.assertEqual(ct.main([str(z)]), 0)
+
+    def test_manifest_parsed_once(self):
+        z = make_zip(self.tmp / "g.zip", good_files())
+        with mock.patch.object(ct.json, "loads", wraps=json.loads) as loads, mock.patch.object(ct, "sim_checks"):
+            self.assertEqual(ct.main([str(z)]), 0)
+        self.assertEqual(loads.call_count, 1)
+
+    def test_subprocess_timeout(self):
+        with mock.patch.object(ct.subprocess, "run", return_value=mock.Mock(returncode=0)) as run:
+            ct.run(["checker"])
+        self.assertEqual(run.call_args.kwargs["timeout"], 300)
+        with mock.patch.object(ct.subprocess, "run", side_effect=subprocess.TimeoutExpired("checker", 300)):
+            with self.assertRaisesRegex(ct.Refuse, "timed out"):
+                ct.run(["checker"])
+
+    def test_main_reports_timeout(self):
+        z = make_zip(self.tmp / "g.zip", good_files())
+        with mock.patch.object(ct.subprocess, "run", side_effect=subprocess.TimeoutExpired("checker", 300)):
+            self.assertEqual(ct.main([str(z)]), 1)
 
     def test_no_theme_json(self):
         self.refused({"main.slint": "x"}, pattern="theme.json not found")
@@ -166,6 +248,47 @@ class Index(unittest.TestCase):
         self.assertTrue(self.check(seq=3, previous={"seq": 3, "themes": [self.theme()], "plugins": []}))
         self.assertEqual(self.check(seq=4, previous={"seq": 3, "themes": [self.theme()], "plugins": []}), [])
 
+    def test_reserved_plugin_packages(self):
+        for prefix in ("dev.olatool.", "com.olaelectric.", "com.ola.", "android.", "com.android."):
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.check(plugins=[self.plugin(package=prefix + "example")]))
+        self.assertEqual(self.check(plugins=[self.plugin(package="com.olaf.example")]), [])
+
+    def test_release_asset_urls(self):
+        urls = ("https://github.com/a/b", "https://github.com/a/b/releases/tag/v1",
+                "https://github.com/a/b/releases/download/", "https://github.com/a/b/c/releases/download/v1/x",
+                "https://github.com/a/b/releases/download/v1/x\n", "https://github.com/a/b/releases/download/v1/x y")
+        for url in urls:
+            for field in ("url", "preview"):
+                with self.subTest(url=url, field=field):
+                    self.assertTrue(self.check([self.theme(**{field: url})]))
+            self.assertTrue(self.check(plugins=[self.plugin(url=url)]))
+        self.assertEqual(self.check([self.theme(url="https://github.com/a-b.c/d_e/releases/download/v1/x")]), [])
+
+    def test_package_size_caps(self):
+        self.assertEqual(self.check([self.theme(size=4 * 1024 * 1024)],
+                                    [self.plugin(size=50 * 1024 * 1024)]), [])
+        self.assertTrue(self.check([self.theme(size=4 * 1024 * 1024 + 1)]))
+        self.assertTrue(self.check(plugins=[self.plugin(size=50 * 1024 * 1024 + 1)]))
+
+    def test_invalid_previous_index_fails(self):
+        for argv in ([], ["--changed"]):
+            with self.subTest(argv=argv), mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(
+                    returncode=0, stdout="{broken")), mock.patch("sys.stderr", new_callable=io.StringIO) as err:
+                self.assertEqual(ci.main(argv), 1)
+                self.assertIn("origin/main:store/index.json", err.getvalue())
+
+    def test_absent_previous_index_is_allowed(self):
+        with mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(returncode=128)):
+            self.assertIsNone(ci.previous_index())
+
+    def test_previous_index_is_used(self):
+        previous = {"seq": 999, "themes": [], "plugins": []}
+        with mock.patch.object(ci.subprocess, "run", return_value=mock.Mock(
+                returncode=0, stdout=json.dumps(previous))):
+            self.assertEqual(ci.previous_index(), previous)
+            self.assertEqual(ci.main([]), 1)
+
     def test_changed(self):
         old = {"themes": [self.theme()], "plugins": []}
         new = {"themes": [self.theme(), self.theme(id="other")], "plugins": [self.plugin()]}
@@ -218,6 +341,42 @@ class PluginDecision(unittest.TestCase):
         problems, _ = cp.decide(PERMS, MANIFEST + HOME_ACTIVITY, {})
         self.assertEqual(problems, ["has an activity with category HOME"])
 
+    def test_manifest_resource_references(self):
+        for value in ('"@string/home"', '@0x7f010001', '(type 0x01)@0x7f010001'):
+            tree = MANIFEST + HOME_ACTIVITY.replace('"android.intent.category.HOME"', value)
+            with self.subTest(value=value):
+                self.assertIn("manifest uses a resource reference; write names literally", cp.decide(PERMS, tree, {})[0])
+        tree = MANIFEST.replace('".WeatherService"', '"@string/service"')
+        self.assertIn("manifest uses a resource reference; write names literally", cp.decide(PERMS, tree, {})[0])
+
+    def test_dynamic_dex_loading_strings(self):
+        for name in ("DexClassLoader", "InMemoryDexClassLoader", "DexFile"):
+            for sep in ("/", "."):
+                for encoding in ("utf-8", "utf-16-le"):
+                    with self.subTest(name=name, sep=sep, encoding=encoding):
+                        blob = sep.join(("dalvik", "system", name)).encode(encoding)
+                        self.assertTrue(cp.decide(PERMS, MANIFEST, {"classes.dex": blob})[0])
+
+    def test_executable_assets(self):
+        for ext in ("dex", "jar", "apk", "zip", "so", "DEX"):
+            name = f"assets/nested/code.{ext}"
+            with self.subTest(name=name):
+                self.assertTrue(any(name in p for p in cp.decide(PERMS, MANIFEST, {name: b"code"})[0]))
+        self.assertEqual(cp.decide(PERMS, MANIFEST, {"assets/data.txt": b"data"})[0], [])
+
+    def test_scans_all_apk_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            apk = Path(tmp) / "plugin.apk"
+            signed = mock.Mock(returncode=0, stdout="certificate SHA-256 digest: " + "a" * 64, stderr="")
+            for name in ("res/raw/payload.txt", "lib/arm64-v8a/plugin.so", "assets/payload.txt", "other.dex"):
+                with self.subTest(name=name):
+                    make_zip(apk, {"AndroidManifest.xml": b"manifest", name: b"ICommanderService"})
+                    with mock.patch.object(cp, "tool", side_effect=[
+                            mock.Mock(returncode=0, stdout=PERMS), mock.Mock(returncode=0, stdout=MANIFEST), signed
+                    ]), mock.patch("sys.stderr", new_callable=io.StringIO) as err:
+                        self.assertEqual(cp.main(["checker", str(apk)]), 1)
+                    self.assertIn(name, err.getvalue())
+
     def test_dex_strings(self):
         for blob in (b"..Lcom/olaelectric/vehicleparser/IParser;..", b"com.olaelectric.vehicleinterface",
                      "ICommanderService".encode("utf-16-le")):
@@ -231,6 +390,35 @@ class PluginDecision(unittest.TestCase):
     def test_bad_slots(self):
         problems, _ = cp.decide(PERMS, MANIFEST.replace("widgets,media", "vehicle"), {})
         self.assertTrue(any("slots" in p for p in problems))
+
+
+class StorePolicy(unittest.TestCase):
+    def test_workflow_limits(self):
+        workflow = (ci.ROOT / ".github/workflows/store.yml").read_text()
+        self.assertRegex(workflow, r"(?m)^    timeout-minutes: 30$")
+        curl = next(line for line in workflow.splitlines() if line.strip().startswith("curl "))
+        for option in ("--max-time 300", "--proto '=https'", "--proto-redir '=https'", '--max-filesize "$size"'):
+            self.assertIn(option, curl)
+        self.assertIn("${ANDROID_HOME:-}", workflow)
+
+    def test_store_trust_policy(self):
+        readme = (ci.ROOT / "store/README.md").read_text()
+        for rule in ("tripwire, not a sandbox", "runtime-built strings", "ordinary app", "per slot",
+                     "store/index.json` alone", "tools/", ".github/", "sdk", ".gitmodules",
+                     "reviewed as code", "re-run from main", "up to date before merging", "verbatim"):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, readme)
+
+    def test_codeowners(self):
+        rules = (ci.ROOT / ".github/CODEOWNERS").read_text().splitlines()
+        for path in ("/tools/", "/.github/", "/sdk", "/.gitmodules"):
+            self.assertIn(f"{path} @abhi245y", rules)
+
+    def test_theme_schema(self):
+        schema = (ci.ROOT / "store/schema.md").read_text()
+        for rule in ("[a-z0-9-]{1,64}", ".ttc", "hint", "runtime guard", "256 KB", "16,000,000"):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, schema)
 
 
 if __name__ == "__main__":

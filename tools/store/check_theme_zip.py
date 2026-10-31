@@ -28,6 +28,8 @@ EXTS = {".slint", ".json", ".png", ".svg", ".ttf", ".otf", ".ttc", ".txt"}
 MAX_FILES = 200
 MAX_INFLATED = 2 * 1024 * 1024
 MAX_IMAGE = 2048
+MAX_SVG = 256 * 1024
+MAX_PIXELS = 16_000_000
 MAX_TICKS = 3
 
 
@@ -61,13 +63,16 @@ def unpack(zip_path, dest):
         if len(infos) > MAX_FILES:
             raise Refuse(f"{len(infos)} entries, more than {MAX_FILES}")
         names = [i.filename for i in infos]
-        if len(set(names)) != len(names):
+        if len({n.casefold() for n in names}) != len(names):
             raise Refuse("duplicate entry names")
         for i in infos:
-            n = i.filename
+            n = i.orig_filename
             parts = n.split("/")
-            if "\\" in n or n.startswith("/") or re.match(r"[A-Za-z]:", n) or ".." in parts or "\0" in n:
+            if ("\\" in n or n.startswith("/") or re.match(r"[A-Za-z]:", n) or ".." in parts
+                    or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in n)):
                 raise Refuse(f"unsafe path {n!r}")
+            if i.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):
+                raise Refuse(f"{n!r}: compression type not supported")
             mode = i.external_attr >> 16
             if mode and stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR):  # 0: writers that set no type
                 raise Refuse(f"{n!r} is a symlink or special entry")
@@ -106,47 +111,45 @@ def unpack(zip_path, dest):
 
 def image_size(path):
     data = path.read_bytes()
-    if path.suffix.lower() == ".png":
-        if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
-            raise Refuse(f"{path.name}: not a PNG (bad header)")
-        return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
-    # SVG: width/height attributes of the root tag; ponytail: viewBox-only SVGs are not measured
-    tag = re.search(rb"<svg\b[^>]*>", data)
-    if not tag:
-        raise Refuse(f"{path.name}: not an SVG")
-    dims = []
-    for attr in (b"width", b"height"):
-        m = re.search(rb"\s" + attr + rb"\s*=\s*[\"']\s*([0-9.]+)\s*(?:px)?\s*[\"']", tag.group())
-        dims.append(float(m.group(1)) if m else 0)
-    return tuple(dims)
+    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        raise Refuse(f"{path.name}: not a PNG (bad header)")
+    return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
 
 
-def check_tree(root, expect_id):
-    theme_id = None
-    try:
-        theme_id = json.loads((root / "theme.json").read_text("utf-8")).get("id")
-    except (ValueError, AttributeError):
-        pass
+def check_tree(root, expect_id, manifest):
+    theme_id = manifest.get("id") if isinstance(manifest, dict) else None
     check_id(theme_id)
     if expect_id and theme_id != expect_id:
         raise Refuse(f"theme.json id {theme_id!r} differs from the index id {expect_id!r}")
     if not (root / "preview.png").is_file():
         raise Refuse("preview.png is missing")
-    ticks = 0
+    ticks, pixels = 0, 0
     for p in (q for q in root.rglob("*") if q.is_file()):
-        if p.suffix.lower() in (".png", ".svg"):
+        if p.suffix.lower() == ".png":
             w, h = image_size(p)
             if w > MAX_IMAGE or h > MAX_IMAGE:
                 raise Refuse(f"{p.relative_to(root)} is {w:g} x {h:g}, over {MAX_IMAGE} x {MAX_IMAGE}")
-        elif p.suffix.lower() == ".slint":
-            ticks += p.read_text("utf-8", "replace").count("animation-tick(")
+            pixels += w * h
+            if pixels > MAX_PIXELS:
+                raise Refuse(f"{pixels} decoded PNG pixels, more than {MAX_PIXELS}")
+        elif p.suffix.lower() == ".svg":
+            if p.stat().st_size > MAX_SVG:
+                raise Refuse(f"{p.relative_to(root)}: SVG larger than {MAX_SVG} bytes")
+            if not re.search(rb"<svg\b[^>]*>", p.read_bytes()):
+                raise Refuse(f"{p.name}: not an SVG")
+        elif p.suffix.lower() in (".slint", ".txt", ".json"):
+            src = re.sub(r"//[^\n]*|/\*.*?\*/", "", p.read_text("utf-8", "replace"), flags=re.S)
+            ticks += len(re.findall(r"animation[-_]tick\s*\(", src))
     if ticks > MAX_TICKS:
         raise Refuse(f"{ticks} uses of animation-tick(, more than {MAX_TICKS}")
     return theme_id
 
 
 def run(cmd, **kw):  # one seam for tests
-    return subprocess.run(cmd, **kw)
+    try:
+        return subprocess.run(cmd, timeout=300, **kw)
+    except subprocess.TimeoutExpired:
+        raise Refuse(f"{cmd[0]} timed out after 300 seconds")
 
 
 def sim_checks(theme_dir, out):
@@ -179,7 +182,7 @@ def main(argv=None):
         check_id(theme_id)
         theme_dir = tmp / theme_id  # sim wants the folder name to equal the id
         stage.rename(theme_dir)
-        check_tree(theme_dir, a.id)
+        check_tree(theme_dir, a.id, manifest)
         sim_checks(theme_dir, Path(a.out))
     except Refuse as e:
         print(f"REFUSED: {e}", file=sys.stderr)

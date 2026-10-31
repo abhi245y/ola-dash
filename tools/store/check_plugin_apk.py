@@ -26,7 +26,8 @@ BANNED_PERMS = {
         "PACKAGE_USAGE_STATS",
     )
 }
-BANNED_STRINGS = ["com.olaelectric.vehicleparser", "com.olaelectric.vehicleinterface", "ICommanderService"]
+BANNED_STRINGS = ["com.olaelectric.vehicleparser", "com.olaelectric.vehicleinterface", "ICommanderService",
+                  "dalvik.system.DexClassLoader", "dalvik.system.InMemoryDexClassLoader", "dalvik.system.DexFile"]
 PLUGIN_ACTION = "dev.olatool.dash.plugin.PLUGIN"
 SLOTS_META = "dev.olatool.dash.plugin.slots"
 SLOTS = {"widgets", "media", "navigation"}
@@ -69,9 +70,13 @@ def decide(perms_out, xmltree_out, blobs):
     perms = set(re.findall(r"^uses-permission[\w-]*: name='([^']+)'", perms_out, re.M))
     perms |= {a.get("name") for t, a, _ in nodes if t.startswith("uses-permission") and a.get("name")}
     problems = [f"requests {p}" for p in sorted(perms & BANNED_PERMS)]
+    if any(v.startswith("@") for _, attrs, _ in nodes for v in attrs.values()):
+        problems.append("manifest uses a resource reference; write names literally")
     if any(t == "category" and a.get("name") == HOME for t, a, _ in nodes):
         problems.append("has an activity with category HOME")
     problems += needle_hits({"AndroidManifest.xml (text)": xmltree_out.encode(), **blobs})
+    problems += [f"{n}: executable archive or library under assets/" for n in blobs
+                 if n.lower().startswith("assets/") and Path(n).suffix.lower() in {".dex", ".jar", ".apk", ".zip", ".so"}]
     def ancestors(i):
         out = []
         while nodes[i][2] is not None:
@@ -118,8 +123,7 @@ def main(argv):
         return 1
     try:
         with zipfile.ZipFile(apk) as z:
-            blobs = {n: z.read(n) for n in z.namelist()
-                     if re.fullmatch(r"classes\d*\.dex", n) or n == "AndroidManifest.xml"}
+            blobs = {i.filename: z.read(i) for i in z.infolist()}
     except zipfile.BadZipFile as e:
         print(f"REFUSED: not a zip: {e}", file=sys.stderr)
         return 1
