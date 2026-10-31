@@ -136,13 +136,13 @@ PR2:
 - AC: every M-row except M-aa has a number or a yes/no.
 
 **E0.S6 Theme switching** [SDK] (after E1.S4 PR1)
-- [ ] T1 Restart switch: show the host "Switching to <theme>" screen (spinner) for one frame at least, write `files/themes/previous` and `active`, write the clean-exit marker (so neither the strikes guard nor the watchdog counts it as a crash), then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart).
-- [ ] T1b Hide the gap: the activity's `android:windowBackground` is a static drawable that matches the switching screen (dark fill + centred bitmap), so the rider sees the same screen from exit until the new theme's first frame. Android 10 cannot animate a window background, so the spinner is still only before exit and after the first frame.
-- [ ] T1c Faster start: `copyAssets` copies only when the APK changed (marker with `lastUpdateTime`), not on every start.
+- [x] T1 Restart switch: show the host "Switching to <theme>" screen (spinner) for one frame at least, write `files/themes/previous` and `active`, write the clean-exit marker (so neither the strikes guard nor the watchdog counts it as a crash), then `Runtime.getRuntime().exit(0)`; the system relaunches the home app (M-restart).
+- [x] T1b Hide the gap: the activity's `android:windowBackground` is a static drawable that matches the switching screen (dark fill + centred bitmap), so the rider sees the same screen from exit until the new theme's first frame. Android 10 cannot animate a window background, so the spinner is still only before exit and after the first frame. Shipped (SDK #20) as a solid day colour only; night mode flashes light (follow-up).
+- [x] T1c Faster start: `copyAssets` copies only when the APK changed (marker with `lastUpdateTime`), not on every start.
 - [ ] T1d Target: tap to new theme on screen in 2 s or less on the scooter (owner: "fine as long as it is not a laggy restart"). Measure it; if it is slower after T1c, open the in-process swap story from the backlog.
-- Unlock: a dash restart does not lock the scooter (the lock is BCM state). The host must not show the keypad while it waits for the first lock callback after a restart; it shows the switching screen until lock state is known (M-replay says how long).
-- [ ] T2 Only while `parked`, no alert, unlocked, not test mode.
-- [ ] T3 Root screen `confirm-theme`: "Keep this theme? Reverting in 10 s", Slint `Timer`; confirm deletes `previous`, timeout restores it and restarts.
+- Unlock: a dash restart does not lock the scooter (the lock is BCM state). The host must not show the keypad while it waits for the first lock callback after a restart; it shows the switching screen until lock state is known (M-replay says how long). Done in SDK #20 via a `themes/restart` marker with a 15 s cap.
+- [x] T2 Only while `parked`, no alert, unlocked, not test mode.
+- [x] T3 Root screen `confirm-theme`: "Keep this theme? Reverting in 10 s", Slint `Timer`; confirm deletes `previous`, timeout restores it and restarts.
 - [x] T4 (separate small PR, Java only, any time) Bad-theme guard: `files/themes/strikes` = `<name> <n>`, set in `onCreate`, cleared 10 s after `onCreate`; two failed starts with the same theme make the third start load `default` and mark the theme bad. Test with a debug-only `debug.oladash.panic` property the Rust side reads (follow-up: not in the first PR; until then seed `files/themes/strikes` by hand).
 - AC: on the scooter, tap to new theme in 2 s or less with no keypad flash and no blank frame; keypad, trunk and media work after the switch; a theme that panics at start is replaced on the third start.
 
