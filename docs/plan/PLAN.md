@@ -164,8 +164,8 @@ PR B (M4):
 - AC: the four v6 themes pass `check-themes` unchanged; `sim themes/default --opt accent=#ff0000` changes nothing and logs one skip line.
 
 **E1.S2 Design language and safety visuals** [SDK]
-- [ ] T1 Design (process above): concept boards for strip, telltale glyphs, alert cards, lock screen, settings frame; token list (colours, type scale, radii, sizes) agreed with the owner. Sunlight and gloves: 64 px targets, 4.5:1 text contrast. Strip stays 48 px (top/bottom) and 72 px (left/right) in v7.
-- [ ] T2 Implement: `OverlayTokens`, glyph paths, alert card, `unlock.slint` (adds charging progress while locked), `HOST_LOCK` defaults. Host minimums stay (telltale 28 px, alert text 32 px), colour + icon meaning stays.
+- [x] T1 Design (process above): concept boards for strip, telltale glyphs, alert cards, lock screen, settings frame; token list (colours, type scale, radii, sizes) agreed with the owner. Sunlight and gloves: 64 px targets, 4.5:1 text contrast. Strip stays 48 px (top/bottom) and 72 px (left/right) in v7.
+- [x] T2 Implement: `OverlayTokens`, glyph paths, alert card, `unlock.slint` (adds charging progress while locked), `HOST_LOCK` defaults. Host minimums stay (telltale 28 px, alert text 32 px), colour + icon meaning stays.
 - AC: 30 sim captures (four placements x alerts 1-6, locked, locked-error, cooldown, charge) on the PR; `theme_root.rs` contrast tests pass; passcode behaviour unchanged.
 
 **E1.S3 Host shell** [SDK]
