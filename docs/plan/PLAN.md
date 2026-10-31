@@ -181,8 +181,8 @@ PR B (M4):
 - AC: settings survive a restart; a corrupt file never crashes the host; `sim --screen settings` captures per pane.
 
 **E1.S5 Plugins pane** [SDK]
-- [ ] T1 `PluginHost` writes `files/plugins/installed.json` (package, label, declared slots) on every refresh; the pane lists it; a toggle calls `set-plugin(pkg, slots)`; Rust rewrites `files/plugins/enabled` (format in `docs/plugins.md`) and sends `plugins.refresh` through `onDashAction`, which calls `PluginHost.refresh()`.
-- [ ] T2 `sim --screen plugins --plugins-file <json>` capture.
+- [x] T1 `PluginHost` writes `files/plugins/installed.json` (package, label, declared slots) on every refresh; the pane lists it; a toggle calls `set-plugin(pkg, slots)`; Rust rewrites `files/plugins/enabled` (format in `docs/plugins.md`) and sends `plugins.refresh` through `onDashAction`, which calls `PluginHost.refresh()`.
+- [x] T2 `sim --screen settings --pane plugins --plugins-file <json>` capture (SDK #22). Follow-up: widget titles from plugins (PluginHost `clip()`) still keep control characters; filter them like pane labels.
 - AC: `example-sysinfo` enabled and disabled from the dash on the dev scooter with no adb.
 
 **E1.S6 Handlebar buttons** [SDK] (needs M-dpad)
