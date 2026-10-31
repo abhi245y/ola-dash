@@ -171,9 +171,9 @@ PR B (M4):
 **E1.S3 Host shell** [SDK]
 - [ ] T1 `in property <string> screen: "dash"` on `Host`; screens drawn with `if` between `dash := Dash` and `HostOverlay`, so the lock screen and alerts cover them. Navigation stays in Slint. `screen` resets to `dash` in the same evaluation when `parked` turns false or an alert starts.
 - [ ] T2 Hub button: the strip's end cell, 64 px along the strip by the strip height, never moves or shrinks a telltale; visible only when `parked`, no alert, unlocked, not test mode. Added to the host-owned list in `docs/safety.md`.
-- [ ] T3 Close button on every screen. `apps` is a placeholder until E2.S2. `host/ui/kit.slint` with only the parts the frame uses (rail row, close button).
-- [ ] T4 `sim --screen settings|apps`.
-- AC: parked, the owner reaches the settings frame and the apps placeholder from any theme; leaving `parked` closes them in one frame (sim capture pair).
+- [ ] T3 Close button on every screen. No apps screen until E2.S2 (no placeholders shown to riders). `host/ui/kit.slint` with only the parts the frame uses (rail row, close button, pane).
+- [ ] T4 `sim --screen settings`.
+- AC: parked, the owner reaches the settings frame from any theme; leaving `parked` closes them in one frame (sim capture pair).
 
 **E1.S4 Settings core** [SDK]
 - [ ] PR1: `files/settings.json` owned by Rust (read in `run()` before `load_ui`, exposed as root properties, written by root callback `set-setting(key, value)` via temp file + rename; a parse failure renames it `.bad` and starts from defaults, unit-tested). Rail and pane, rail rows 72 px; the rail lists only panes that exist. Panes: Display (night on/off, 12/24 h clock in the `CLOCK_HHMM` arm, brightness only if M-dev allows), About (from `files/about.json` written by Java at start: version + git rev, contract, cert SHA-256, log size and clear). Navigation model on every pane: `cursor`, `move(d)`, `select()`, `close()`, used by touch and by E1.S5.
