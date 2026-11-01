@@ -1,5 +1,5 @@
 // Terminal: one fixed character grid below the host's 48 px strip.
-import { Vehicle, Battery, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, LockStyle, LockKeyShape, LockDigits, AlertPosition } from "vehicle.slint";
+import { Vehicle, Battery, Display, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, LockStyle, LockKeyShape, LockDigits, AlertPosition } from "vehicle.slint";
 import "fonts/IBMPlexMono-Medium.ttf";
 import "fonts/IBMPlexMono-Bold.ttf";
 
@@ -94,40 +94,68 @@ component Readout inherits Rectangle {
         width: parent.width;
         height: 1px;
         background: root.dim;
-        opacity: 0.5;
+        opacity: Display.night ? 0.5 : 1;
     }
 }
 
 export component Dash inherits Window {
     width: 1280px;
     height: 768px;
-    background: #000000;
+    background: root.ground;
     default-font-family: "IBM Plex Mono";
 
     in property <string> opt-color: "green";
     in property <bool> opt-scanlines: false;
 
-    property <color> phosphor: root.opt-color == "amber" ? #ffb000
-        : root.opt-color == "white" ? #e8e8e8 : #33ff66;
-    property <color> dim: root.opt-color == "amber" ? #8a5f00
-        : root.opt-color == "white" ? #7a7a7a : #1f8f3f;
+    // Day grounds per option (owner, 2026-11-01): green on warm paper, amber
+    // reversed (the night phosphor as the ground), white on a reflective-LCD grey.
+    property <color> night-ground: #000000;
+    property <color> day-green-ground: #F4F1EA;
+    property <color> day-amber-ground: #FFB000;
+    property <color> day-white-ground: #C9D3C4;
+    property <color> ground: Display.night ? root.night-ground
+        : root.opt-color == "amber" ? root.day-amber-ground
+        : root.opt-color == "white" ? root.day-white-ground : root.day-green-ground;
+    property <color> strip-bg: #000000;
+    property <color> night-green-phosphor: #33ff66;
+    property <color> day-green-phosphor: #0F5A2E;
+    property <color> night-amber-phosphor: #ffb000;
+    property <color> day-amber-phosphor: #1A1000;
+    property <color> night-white-phosphor: #e8e8e8;
+    property <color> day-white-phosphor: #121A12;
+    property <color> night-green-dim: #1f8f3f;
+    property <color> day-green-dim: #46604B;
+    property <color> night-amber-dim: #a06e00;
+    property <color> day-amber-dim: #5C3D00;
+    property <color> night-white-dim: #7a7a7a;
+    property <color> day-white-dim: #3E4A3E;
+
+    property <color> night-phosphor: root.opt-color == "amber" ? root.night-amber-phosphor
+        : root.opt-color == "white" ? root.night-white-phosphor : root.night-green-phosphor;
+    property <color> phosphor: Display.night ? root.night-phosphor
+        : root.opt-color == "amber" ? root.day-amber-phosphor
+        : root.opt-color == "white" ? root.day-white-phosphor : root.day-green-phosphor;
+    property <color> dim: Display.night
+        ? (root.opt-color == "amber" ? root.night-amber-dim
+            : root.opt-color == "white" ? root.night-white-dim : root.night-green-dim)
+        : (root.opt-color == "amber" ? root.day-amber-dim
+            : root.opt-color == "white" ? root.day-white-dim : root.day-green-dim);
 
     out property <OverlayPlacement> overlay-placement: OverlayPlacement.top;
     out property <OverlayStyle> overlay-style: {
-        background: #000000,
-        foreground: root.phosphor,
+        background: root.strip-bg,
+        foreground: root.night-phosphor,
         corner-radius: 0px,
         show-labels: false,
     };
     out property <AlertPosition> alert-position: AlertPosition.lower;
-    // Use bright phosphor for host secondary copy too: the dim amber label
-    // colour falls below the host's 4.5:1 requirement for small lock text.
+    // Secondary lock copy uses the phosphor so it reads at the hero's contrast.
     out property <LockStyle> lock-style: {
-        background: #000000,
+        background: root.ground,
         foreground: root.phosphor,
         muted: root.phosphor,
         accent: root.phosphor,
-        key-background: #000000,
+        key-background: root.ground,
         key-border: root.dim,
         key-shape: LockKeyShape.grid,
         digits: LockDigits.sans,
@@ -168,8 +196,9 @@ export component Dash inherits Window {
     property <string> trip-text: Vehicle.trip-km < 0 ? "-- km"
         : floor(root.trip-tenths / 10) + "." + Math.mod(root.trip-tenths, 10) + " km";
 
-    // One animation clock for one cursor. Readings have no easing or timers.
-    property <bool> cursor-on: Math.mod(animation-tick() / 500ms, 2) < 1;
+    // One 500 ms timer blinks the cursor. Readings have no easing or timers.
+    property <bool> cursor-on: true;
+    Timer { interval: 500ms; running: true; triggered => { root.cursor-on = !root.cursor-on; } }
 
     Text {
         x: 32px; y: 148px; width: 552px; height: 48px;
@@ -248,10 +277,10 @@ export component Dash inherits Window {
     }
 
     // One cached SVG pattern, instantiated only when enabled. No scan animation.
-    if root.opt-scanlines: Image {
+    if root.opt-scanlines && Display.night: Image {
         x: 0px; y: 48px; width: 1280px; height: 720px;
         source: @image-url("scanlines.svg");
     }
-    // Vehicle.data-stale and Display.night deliberately do not alter the face:
-    // the host owns the NO DATA badge; this palette is the same day and night.
+    // The host owns the NO DATA badge; Vehicle.data-stale does not alter the face.
+    // Display.night selects the palette and enables optional scanlines.
 }
