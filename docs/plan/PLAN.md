@@ -86,7 +86,7 @@ Brightness: if the panel only follows the vehicle path (`setScooterBrightnessLev
 | M1 Safe core | E0.S2 (two PRs), E0.S4, E0.S3, E0.S5, E0.S1, E1.S1 PR A | Session A at the end |
 | M2 Hub | E1.S2, E1.S3, E1.S4 PR1, E0.S6, E1.S4 PR2, E1.S5, E1.S6 | Verification |
 | M3 Beyond the dash | E2 (SAW and usage-stats grants set by hand over the root service in the session-B checklist); E7.S1 if not done in A | Session B |
-| M4 Theme pack | E1.S1 PR B, E3, E4.S1-S3, E4.S5; E4.S4 after E8 | Perf check |
+| M4 Theme pack | E1.S1 PR B, E3, E4.S1-S3, E4.S5-S7; E4.S4 after E8 | Perf check |
 | M5 Install and recovery | E5 | Session C: install, crash-loop, restore |
 | M6 Store | E6 | Install test |
 | AA mode | E7.S2-S3 after the spike and E2.S1 | Ride test |
@@ -209,7 +209,7 @@ PR B (M4):
 
 **E3.S1 Options and auto night** [SDK] (after E1.S1 PR B)
 - [x] T1 (SDK #24) Theme pane renders controls from `options`; values per theme in `settings.json`; applied live through the `opt-<id>` root properties.
-- [x] T2 (SDK #25; clock only, light sensor waits for M-dev) Night `auto`: light sensor if present (M-dev), else clock with editable times; falls back to manual when `AUTO_TIME` is off or the year is implausible. Night is optional per theme.
+- [x] T2 (SDK #25; clock only, light sensor waits for M-dev) Night `auto`: light sensor if present (M-dev), else clock with editable times; falls back to manual when `AUTO_TIME` is off or the year is implausible. Night is optional for third-party themes; first-party themes follow D14.
 - AC: changing an option or night updates the theme with no recompile.
 
 **E3.S2 Theme list and previews** [SDK]
@@ -217,13 +217,35 @@ PR B (M4):
 
 ### E4 Theme pack [ola-dash]
 
-Design process as in E1. Every theme: concept board (Codex) and critique, owner sign-off, implementation, `sim` captures (riding, parked, charging, locked, alert), `lock-style`, overlay settings, `preview.png`, `check-themes` pass (sandbox included), under 2 MB, M-frame on the scooter. Dials are drawn with paths and `sin`/`cos`, never `transform-rotation`. At most three `animation-tick()` bindings. Contract data only. Night optional.
+Design process as in E1. Every theme: concept board (Codex) and critique, owner sign-off, implementation, `sim` captures (riding, parked, charging, locked, alert), `lock-style`, overlay settings, `preview.png`, `check-themes` pass (sandbox included), under 2 MB, M-frame on the scooter. Dials are drawn with paths and `sin`/`cos`, never `transform-rotation`. At most three `animation-tick()` bindings. Contract data only. Every first-party theme has a light day look and a dark night look, switched by `Display.night` (D14).
 
 - [x] E4.S1 (#5; M-frame on scooter pending) **Twin dial** (look: the "Instrument" direction from the E1.S2 round, owner's choice: dark glass, engraved scales, copper accent kept distinct from amber): analog speedometer, power/regen dial (`current-a` x `voltage-v`), small battery and temperature dials. Options: accent, needle style, digital speed overlay, power bar instead of dial.
 - [x] E4.S2 (#6; M-frame pending) **Terminal**: monospace on black, readout lines that change only when values change, ASCII bar gauges, one blinking cursor. Options: green, amber, white; scanlines.
 - [x] E4.S3 (#7; M-frame pending) **Zen**: speed and battery only, very large type, for sunlight.
 - [ ] E4.S4 **Cockpit**: AAOS-style card home (navigation, media, vehicle, plugin widgets). After E8.
-- [ ] E4.S5 Default theme refresh to the new design language [SDK].
+- [ ] E4.S5 Default theme refresh to "Ride Buddy", day and night [SDK]: one board round covering both looks; `contract: 7` and the `Display` import.
+- [ ] E4.S6 **Day and night for Twin Dial, Terminal and Minimal** (owner, 2026-11-01, D14): their current look becomes night; a light day look is added. Same layout and geometry in both looks; only colours change. Per theme: day board (Codex) next to the shipped night capture, critique, owner sign-off, then implementation with day and `--night` `sim` captures. `lock-style` passes the host checks in both looks (no "rejected" line in either capture); body text measured in the critique and listed in the PR: primary >= 7:1, secondary >= 4.5:1, meaning-bearing lines >= 3:1 on the day ground.
+  - Twin Dial: colours also live in `instruments.slint` (face, hub, ticks, small dials take colour properties); day needle = the `accent` option mixed 50 % with black.
+  - Terminal: day and night palettes for each `color` option (green, amber, white); the strip keeps the night phosphor foreground in both looks (deep ink on the black strip fails the host's 4.5:1 strip rule); scanlines night-only; T5 and T13 amber land in the same PR.
+  - Minimal (ola-dash `themes/minimal`, the product's copy of the SDK reference theme; kept because the owner uses every bundled theme): `contract: 7` and the `Display` import; a bundled font (it uses the platform default, against the E4 font rule); the disabled Open trunk button uses a muted colour instead of `opacity: 0.35`; `lock-style` and `overlay-style` may stay absent (host defaults follow night).
+  - `--write-preview` renders day, so the previews change; T12 gates them.
+  - Docs: `contract.md` `Display.night` row (the host sets it since SDK #25; first-party rule); `themes.md` store note (day and night recommended, not checked).
+- [ ] E4.S7 Fixes from session A (2026-11-01) and the Fable principal review. Order: SDK PR1 = T1, T2, T3, T4, T6 (T1 and T6 block scooter sessions); SDK PR2 = T7, T10, T14; SDK PR3 = T8, T9, T11, T13 contract sentence; ola-dash: T5 and T13 theme parts inside the E4.S6 PRs, T12 before E4.S6 merges, then the SDK pin bump.
+  - [ ] T1 [SDK] Theme restart aborts: `std::process::exit(0)` (`host/src/lib.rs:536`) runs exit handlers while Binder threads still hold a mutex; every switch logs SIGABRT "pthread_mutex_lock called on a destroyed mutex". Exit without running them (`libc::_exit` or `Process.killProcess`).
+  - [ ] T2 [SDK] First-run card lists only the first four installed themes (`FirstRunScreen` `Choice`); with seven installed, Twin Dial, Terminal and Zen were not offered. Use the Theme pane's list.
+  - [ ] T3 [SDK] Keep/Revert card covers the whole screen, so the rider cannot see the theme being judged; make it a card over the theme.
+  - [ ] T4 [SDK] Bundled theme folders that leave the APK stay in `files/themes/` and show as "Sideloaded" (`fields`, `segment` on the scooter); `copyAssets` removes folders whose `.bundled` marker has no APK asset (the two legacy folders have no marker and are removed by hand).
+  - [ ] T5 Terminal cursor uses `animation-tick()` and redraws every frame: 26 % of one core while parked (Default 3 %, Twin Dial and Zen under 1 %). Blink with a 500 ms `Timer`.
+  - [ ] T6 [SDK] `hmi-swap.sh dash` also runs `pm enable dev.olatool.dash` (the dash was found disabled).
+  - [ ] T7 [SDK] Start-up decodes every `preview.png` (`theme_switch.rs:91`) on the UI thread before the first frame; decode when the Theme pane opens.
+  - [ ] T8 [SDK] `VehicleBridge` replay guard: restore the explicit vehicle-slot bounds (`id <= MCU_TEMP`, `id != DATE_YMD`).
+  - [ ] T9 [SDK] Theme name, description and option labels go through the plugin `printable()` filter, with length caps.
+  - [ ] T10 [SDK] A theme that fails to compile after a switch is reverted, not offered for Keep over the fallback look; a failed keep or revert clears the confirm card instead of retrying every second.
+  - [ ] T11 [SDK] Tests: closed gate blocks `switch-theme`; confirm timeout reverts; restart marker with an auth error.
+  - [ ] T12 CI job for `themes/**` and SDK pin bumps: `check-themes` plus a stale-`preview.png` check.
+  - [ ] T13 [SDK + ola-dash] Terminal amber label colour reaches 4.5:1; contract sentence on speed (never negative, 0 until reported) and the themes aligned to it.
+  - [ ] T14 [SDK] Switching window background follows night (today it flashes the day colour in night).
+  - Not tracked on purpose: the `.bundled`/`.store` badge is advisory (E6 keeps its own registry); the owner reviews Twin Dial's regen colour and Zen's speed alignment with the E4.S6 boards.
 
 ### E5 Release, recovery, installer [ola-dash unless noted]
 
@@ -327,4 +349,5 @@ Design process as in E1. Every theme: concept board (Codex) and critique, owner 
 - D10: owner PIN deferred to the backlog (owner, 2026-10-30).
 - D13 (2026-10-31): host design language = "Ride Buddy, day and night": one system with a light day mode and a dark night mode, switched by `Display.night`; sunny pill selection; one fact per screen; 48 px strip. Owner's choice after four directions (comps in SDK `.impeccable/mocks/e1s2/`).
 - D12 (2026-10-31): the "Instrument" design direction becomes the Twin Dial theme (E4.S1), not the host look.
+- D14 (2026-11-01): every first-party theme (ola-dash `themes/*`, Minimal included, and the SDK Default) ships a light day look and a dark night look, switched by `Display.night` (owner). The SDK's Segment, Fields and Minimal stay reference themes, exempt until refreshed. Store submissions: day and night recommended, not checked. Default gets both looks in its E4.S5 refresh; Twin Dial, Terminal and Minimal in E4.S6.
 - D11: UI design through the impeccable skill; Codex makes concept boards and assets and critiques comps; owner and lead decide.
