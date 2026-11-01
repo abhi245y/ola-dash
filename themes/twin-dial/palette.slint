@@ -1,0 +1,19 @@
+import { Display } from "vehicle.slint";
+
+// Every Twin Dial colour, night (the E4 look) and day (E4.S6).
+export global Palette {
+    out property <color> ground: Display.night ? #0b0e13 : #F6F3EC;
+    out property <color> ink: Display.night ? #ffffff : #0F2A2A;
+    out property <color> scale: Display.night ? #dce4ed : #0F2A2A;
+    out property <color> label: Display.night ? #adb9c7 : #4A5C5C;
+    out property <color> minor: Display.night ? #a1afbf : #4A5C5C;
+    out property <color> hub-ring: Display.night ? #aebcca : #4A5C5C;
+    out property <color> rim: Display.night ? #344353 : #747F7F;
+    out property <color> track: Display.night ? #253140 : #747F7F;
+    out property <color> regen: Display.night ? #8796a8 : #4A5C6C;
+    // Day outline matches the ground to separate needles from ticks and numerals.
+    out property <color> needle-outline: Display.night ? #05070a : self.ground;
+    out property <color> key-bg: Display.night ? #111720 : #EDE8DD;
+    out property <color> strip-bg: #0b0e13;
+    out property <color> strip-fg: #ffffff;
+}
