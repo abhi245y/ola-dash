@@ -1,0 +1,198 @@
+{
+  "twin": {
+    "ground": "#F4F3EB",
+    "ground_roi": [
+      610,
+      85,
+      670,
+      140
+    ],
+    "ground_channel_span": [
+      2,
+      3,
+      2
+    ],
+    "roles": {
+      "primary": {
+        "rgb": "#09292C",
+        "contrast": 13.82,
+        "roi": [
+          245,
+          385,
+          395,
+          490
+        ]
+      },
+      "secondary": {
+        "rgb": "#344C53",
+        "contrast": 8.235,
+        "roi": [
+          282,
+          500,
+          370,
+          540
+        ]
+      },
+      "scale_ticks": {
+        "rgb": "#0A2B30",
+        "contrast": 13.465,
+        "roi": [
+          315,
+          80,
+          340,
+          115
+        ]
+      },
+      "needle": {
+        "rgb": "#8C4614",
+        "contrast": 6.304,
+        "roi": [
+          180,
+          130,
+          330,
+          330
+        ]
+      },
+      "regen": {
+        "rgb": "#4F6571",
+        "contrast": 5.497,
+        "roi": [
+          720,
+          120,
+          845,
+          510
+        ]
+      },
+      "empty_gauge_track": {
+        "rgb": "#C6CBCF",
+        "contrast": 1.469,
+        "roi": [
+          560,
+          565,
+          590,
+          625
+        ]
+      }
+    }
+  },
+  "term": {
+    "ground": "#F2EFE8",
+    "ground_roi": [
+      475,
+      80,
+      565,
+      140
+    ],
+    "ground_channel_span": [
+      2,
+      2,
+      2
+    ],
+    "roles": {
+      "primary_ink": {
+        "rgb": "#0E5E31",
+        "contrast": 6.864,
+        "roi": [
+          32,
+          250,
+          365,
+          450
+        ]
+      },
+      "secondary_dim": {
+        "rgb": "#39513E",
+        "contrast": 7.555,
+        "roi": [
+          635,
+          100,
+          710,
+          140
+        ]
+      },
+      "row_divider": {
+        "rgb": "#2A4A35",
+        "contrast": 8.588,
+        "roi": [
+          640,
+          146,
+          1245,
+          152
+        ]
+      },
+      "empty_cells": {
+        "rgb": "#466754",
+        "contrast": 5.494,
+        "roi": [
+          970,
+          99,
+          1084,
+          137
+        ]
+      }
+    }
+  },
+  "min": {
+    "ground": "#F6F3EC",
+    "ground_roi": [
+      510,
+      90,
+      700,
+      150
+    ],
+    "ground_channel_span": [
+      2,
+      3,
+      2
+    ],
+    "roles": {
+      "primary": {
+        "rgb": "#0F2D2C",
+        "contrast": 13.233,
+        "roi": [
+          500,
+          240,
+          770,
+          415
+        ]
+      },
+      "secondary": {
+        "rgb": "#415656",
+        "contrast": 7.04,
+        "roi": [
+          530,
+          425,
+          750,
+          465
+        ]
+      },
+      "disabled_text": {
+        "rgb": "#43595B",
+        "contrast": 6.723,
+        "roi": [
+          285,
+          88,
+          445,
+          115
+        ]
+      },
+      "button_fill": {
+        "rgb": "#ECE6DA",
+        "contrast": 1.121,
+        "roi": [
+          55,
+          75,
+          220,
+          85
+        ]
+      }
+    }
+  },
+  "strip": {
+    "twin-day-ride.png": 99.99,
+    "twin-day-park.png": 99.96,
+    "term-day-ride.png": 20.13,
+    "term-day-park.png": 25.34,
+    "min-day-ride.png": 99.59,
+    "min-day-park.png": 100.0
+  }
+}
