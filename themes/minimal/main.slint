@@ -1,13 +1,26 @@
 // Minimal example theme. Proves a theme swaps in at runtime with no rebuild.
-// Uses the platform default font, draws nothing in the top 48px host bar.
-import { Vehicle, Media, Actions, DriveMode, Plugins, VehicleState } from "vehicle.slint";
+// Uses bundled Noto Sans SemiCondensed, draws nothing in the top 48px host bar.
+import { Vehicle, Media, Actions, DriveMode, Plugins, VehicleState, Display } from "vehicle.slint";
+import "fonts/NotoSans-SemiCondensed.ttf";
+import "fonts/NotoSans-SemiCondensedBold.ttf";
 // Re-exported so the host can reach the globals on the instance.
 export { Vehicle, Media, Actions, DriveMode, Plugins }
 
 export component Dash inherits Window {
     width: 1280px;
     height: 768px;
-    background: #000000;
+    background: root.ground;
+    default-font-family: "Noto Sans SemiCondensed";
+
+    property <color> ground: Display.night ? #000000 : #F6F3EC;
+    property <color> ink: Display.night ? #ffffff : #0F2A2A;
+    property <color> secondary: Display.night ? #b0b0b0 : #4A5C5C;
+    property <color> media-secondary: Display.night ? #888 : #4A5C5C;
+    property <color> button: Display.night ? #2a2a2a : #DBD4C3;
+    property <color> card: Display.night ? #1a1a1a : #DBD4C3;
+    property <color> disabled: Display.night ? #999999 : #4A5C5C;
+
+    property <bool> trunk-enabled: Vehicle.state == VehicleState.park && Vehicle.speed-kmh == 0 && !Vehicle.trunk-open;
 
     // Parked (unlocked, not ready): show P and how to start. Charging also reports park mode.
     property <bool> parked: !Vehicle.charging && (Vehicle.state == VehicleState.park || Vehicle.mode == DriveMode.park);
@@ -28,7 +41,7 @@ export component Dash inherits Window {
             width: parent.width;
             horizontal-alignment: center;
             text: parked ? "P" : round(Vehicle.speed-kmh) + "";
-            color: #ffffff;
+            color: root.ink;
             font-size: 240px;
             font-weight: 700;
         }
@@ -38,7 +51,7 @@ export component Dash inherits Window {
             width: parent.width;
             horizontal-alignment: center;
             text: parked ? "Press the power button to start" : "km/h   " + mode-name;
-            color: #b0b0b0;
+            color: root.secondary;
             font-size: 36px;
         }
         Text {
@@ -47,14 +60,14 @@ export component Dash inherits Window {
             text: (Vehicle.battery-pct < 0 ? "--" : "" + Vehicle.battery-pct + "%") + "   "
                 + (Vehicle.range-km < 0 ? "--" : "" + Vehicle.range-km) + " km"
                 + (Vehicle.charging ? "  charging" : "");
-            color: #ffffff;
+            color: root.ink;
             font-size: 48px;
         }
         Text {
             x: 40px;
             y: 520px;
             text: (Vehicle.left-indicator ? "<  " : "") + "trip " + round(Vehicle.trip-km) + " km" + (Vehicle.right-indicator ? "  >" : "");
-            color: #ffffff;
+            color: root.ink;
             font-size: 36px;
         }
         Text {
@@ -63,7 +76,7 @@ export component Dash inherits Window {
             width: 300px;
             horizontal-alignment: right;
             text: Vehicle.clock-text;
-            color: #ffffff;
+            color: root.ink;
             font-size: 40px;
         }
 
@@ -73,7 +86,7 @@ export component Dash inherits Window {
             y: 36px;
             width: 400px;
             text: Plugins.widgets[0].title + " " + Plugins.widgets[0].value + " " + Plugins.widgets[0].unit;
-            color: #ffffff;
+            color: root.ink;
             font-size: 30px;
             overflow: elide;
         }
@@ -81,45 +94,44 @@ export component Dash inherits Window {
         // Trunk: enabled only parked and stopped; "Trunk open" is passive.
         Rectangle {
             x: 260px; y: 20px; width: 200px; height: 64px;
-            background: #2a2a2a; border-radius: 12px;
-            opacity: (Vehicle.state == VehicleState.park && Vehicle.speed-kmh == 0 && !Vehicle.trunk-open) || Vehicle.trunk-open ? 1 : 0.35;
-            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: Vehicle.trunk-open ? "Trunk open" : "Open trunk"; color: #fff; font-size: 26px; }
+            background: root.button; border-radius: 12px;
+            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: Vehicle.trunk-open ? "Trunk open" : "Open trunk"; color: Vehicle.trunk-open || root.trunk-enabled ? root.ink : root.disabled; font-size: 26px; }
             TouchArea {
-                enabled: Vehicle.state == VehicleState.park && Vehicle.speed-kmh == 0 && !Vehicle.trunk-open;
+                enabled: root.trunk-enabled;
                 clicked => { Actions.open-trunk(); }
             }
         }
         Rectangle {
             x: 40px; y: 20px; width: 200px; height: 64px;
-            background: #2a2a2a; border-radius: 12px;
-            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Settings"; color: #fff; font-size: 26px; }
+            background: root.button; border-radius: 12px;
+            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Settings"; color: root.ink; font-size: 26px; }
             TouchArea { clicked => { Actions.open-settings(); } }
         }
 
         // Media row
         Rectangle {
             x: 40px; y: 600px; width: 520px; height: 120px;
-            background: #1a1a1a;
+            background: root.card;
             border-radius: 12px;
-            Text { x: 24px; y: 16px; text: Media.title; color: #fff; font-size: 30px; }
-            Text { x: 24px; y: 60px; text: Media.artist; color: #888; font-size: 24px; }
+            Text { x: 24px; y: 16px; text: Media.title; color: root.ink; font-size: 30px; }
+            Text { x: 24px; y: 60px; text: Media.artist; color: root.media-secondary; font-size: 24px; }
         }
         Rectangle {
             x: 580px; y: 600px; width: 160px; height: 120px;
-            background: #2a2a2a; border-radius: 12px;
-            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: Media.playing ? "Pause" : "Play"; color: #fff; font-size: 30px; }
+            background: root.button; border-radius: 12px;
+            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: Media.playing ? "Pause" : "Play"; color: root.ink; font-size: 30px; }
             TouchArea { clicked => { Media.play-pause(); } }
         }
         Rectangle {
             x: 760px; y: 600px; width: 160px; height: 120px;
-            background: #2a2a2a; border-radius: 12px;
-            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Next"; color: #fff; font-size: 30px; }
+            background: root.button; border-radius: 12px;
+            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Next"; color: root.ink; font-size: 30px; }
             TouchArea { clicked => { Media.next(); } }
         }
         Rectangle {
             x: 940px; y: 600px; width: 300px; height: 120px;
-            background: #2a2a2a; border-radius: 12px;
-            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Android Auto"; color: #fff; font-size: 30px; }
+            background: root.button; border-radius: 12px;
+            Text { width: parent.width; height: parent.height; horizontal-alignment: center; vertical-alignment: center; text: "Android Auto"; color: root.ink; font-size: 30px; }
             TouchArea { clicked => { Actions.open-android-auto(); } }
         }
     }
