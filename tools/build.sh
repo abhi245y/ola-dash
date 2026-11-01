@@ -16,4 +16,4 @@ rsync -rlp --checksum --delete themes/ "$H:$D/product-themes/"
 ssh "$H" "cd ~/$D/host && EXTRA_THEMES=\$HOME/$D/product-themes ./build.sh"
 mkdir -p out
 scp "$H:$D/host/out/ola-dash-debug.apk" out/
-unzip -l out/ola-dash-debug.apk | grep -q assets/themes/ || { echo "no themes bundled (SDK without EXTRA_THEMES?)" >&2; exit 1; }
+unzip -l out/ola-dash-debug.apk | grep assets/themes/ >/dev/null || { echo "no themes bundled (SDK without EXTRA_THEMES?)" >&2; exit 1; }

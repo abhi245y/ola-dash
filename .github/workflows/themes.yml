@@ -1,0 +1,65 @@
+name: Themes
+
+on:
+  pull_request:
+    paths:
+      - 'themes/**'
+      - 'sdk'
+      - 'tools/check-previews.sh'
+      - '.github/workflows/themes.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'themes/**'
+      - 'sdk'
+      - 'tools/check-previews.sh'
+      - '.github/workflows/themes.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  themes:
+    name: Themes (check and previews)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: recursive
+
+      - name: System libraries for sim (fontconfig, xkbcommon)
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev
+
+      - name: Cache cargo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            sdk/sim/target
+          key: cargo-sim-${{ runner.os }}-${{ hashFiles('sdk/sim/Cargo.lock') }}
+
+      - name: Build the sim
+        run: |
+          set -euo pipefail
+          cargo build --release --manifest-path sdk/sim/Cargo.toml
+
+      - name: Check themes
+        run: |
+          set -euo pipefail
+          SIM="$PWD/sdk/sim/target/release/sim" sdk/tools/check-themes.sh themes/*/
+
+      - name: Check previews
+        id: previews
+        run: |
+          set -euo pipefail
+          SIM="$PWD/sdk/sim/target/release/sim" tools/check-previews.sh
+
+      - name: Upload rendered previews
+        if: failure() && steps.previews.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: previews
+          path: themes/*/preview.png
+          if-no-files-found: ignore
