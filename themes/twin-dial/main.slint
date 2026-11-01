@@ -1,4 +1,5 @@
-import { Vehicle, Battery, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, AlertPosition, LockStyle, LockKeyShape, LockDigits } from "vehicle.slint";
+import { Vehicle, Battery, Display, DriveMode, VehicleState, OverlayPlacement, OverlayStyle, AlertPosition, LockStyle, LockKeyShape, LockDigits } from "vehicle.slint";
+import { Palette } from "palette.slint";
 import { InstrumentArc, InstrumentTick, InstrumentFace, InstrumentNeedle, InstrumentHub, SmallInstrument } from "instruments.slint";
 import "fonts/NotoSans-SemiCondensed.ttf";
 import "fonts/NotoSans-SemiCondensedBold.ttf";
@@ -6,7 +7,7 @@ import "fonts/NotoSans-SemiCondensedBold.ttf";
 export component Dash inherits Window {
     width: 1280px;
     height: 768px;
-    background: #0b0e13;
+    background: Palette.ground;
     default-font-family: "Noto Sans SemiCondensed";
 
     in property <color> opt-accent: #ff7a1a;
@@ -14,22 +15,24 @@ export component Dash inherits Window {
     in property <bool> opt-digital-speed: true;
     in property <bool> opt-power-bar: false;
 
+    property <color> needle: Display.night ? root.opt-accent : root.opt-accent.mix(#000000, 0.5);
+
     out property <OverlayPlacement> overlay-placement: OverlayPlacement.top;
     out property <OverlayStyle> overlay-style: {
-        background: #0b0e13,
-        foreground: #ffffff,
+        background: Palette.strip-bg,
+        foreground: Palette.strip-fg,
         corner-radius: 0px,
         show-labels: false,
     };
     // Keep the speed readout and bottom telemetry clear of an upper alert card.
     out property <AlertPosition> alert-position: AlertPosition.upper;
     out property <LockStyle> lock-style: {
-        background: #0b0e13,
-        foreground: #ffffff,
-        muted: #adb9c7,
-        accent: #dce4ed,
-        key-background: #111720,
-        key-border: #344353,
+        background: Palette.ground,
+        foreground: Palette.ink,
+        muted: Palette.label,
+        accent: Palette.scale,
+        key-background: Palette.key-bg,
+        key-border: Palette.rim,
         key-shape: LockKeyShape.square,
         digits: LockDigits.sans,
     };
@@ -51,7 +54,7 @@ export component Dash inherits Window {
     property <string> power-text: !power-known ? "--"
         : (power-kw < 0 && power-tenths > 0 ? "-" : "")
             + floor(power-tenths / 10) + "." + Math.mod(power-tenths, 10);
-    property <color> power-ink: power-kw < 0 ? #7fa7c9 : root.opt-accent;
+    property <color> power-ink: power-kw < 0 ? Palette.regen : root.needle;
 
     // Prefer fine SOC, falling back to the rounded vehicle reading.
     property <float> battery-value: Battery.soc-pct >= 0 ? Battery.soc-pct : Vehicle.battery-pct;
@@ -79,26 +82,26 @@ export component Dash inherits Window {
     // Speed: centre (326, 332), 0..120 over 240 degrees. The lower opening
     // keeps both endpoint needles clear of the digital speed below the hub.
     InstrumentFace { cx: 326; cy: 332; radius: 260; }
-    InstrumentArc { cx: 326; cy: 332; radius: 173; start: 150; sweep: 240; stroke: #253140; stroke-width: 1px; }
+    InstrumentArc { cx: 326; cy: 332; radius: 173; start: 150; sweep: 240; stroke: Palette.track; stroke-width: 1px; }
     for value in [0, 20, 40, 60, 80, 100, 120] : InstrumentTick {
         cx: 326; cy: 332; radius: 246; angle: 150 + 240 * value / 120;
         tick-length: 23; stroke-width: 3px;
     }
     for value in [10, 30, 50, 70, 90, 110] : InstrumentTick {
         cx: 326; cy: 332; radius: 246; angle: 150 + 240 * value / 120;
-        tick-length: 11; stroke: #a1afbf; stroke-width: 2px;
+        tick-length: 11; stroke: Palette.minor; stroke-width: 2px;
     }
     for value in [0, 20, 40, 60, 80, 100, 120] : Text {
         x: 326px + 202px * Math.cos((150 + 240 * value / 120) * 1deg) - 38px;
         y: 332px + 202px * Math.sin((150 + 240 * value / 120) * 1deg) - 25px;
         width: 76px; height: 50px;
         horizontal-alignment: center; vertical-alignment: center;
-        text: value; color: #ffffff; font-size: 36px; font-weight: 700;
+        text: value; color: Palette.ink; font-size: 36px; font-weight: 700;
     }
     InstrumentNeedle {
         // Tip stops at the inner hairline (r 173), clear of the numerals.
         cx: 326; cy: 332; radius: 172; angle: root.speed-angle;
-        ink: root.opt-accent; bold: root.opt-needle == "bold";
+        ink: root.needle; bold: root.opt-needle == "bold";
     }
     InstrumentHub { cx: 326; cy: 332; }
     Text {
@@ -106,37 +109,37 @@ export component Dash inherits Window {
         horizontal-alignment: center; vertical-alignment: center;
         visible: root.opt-digital-speed;
         text: "" + round(root.speed-value);
-        color: #ffffff; font-size: 124px; font-weight: 700; letter-spacing: -3px;
+        color: Palette.ink; font-size: 124px; font-weight: 700; letter-spacing: -3px;
     }
     Text {
         x: 226px; y: 501px; width: 200px; height: 38px;
         horizontal-alignment: center; vertical-alignment: center;
-        text: "km/h"; color: #adb9c7; font-size: 28px;
+        text: "km/h"; color: Palette.label; font-size: 28px;
     }
 
     if !root.opt-power-bar : Rectangle {
         x: 0px; y: 0px; width: 1280px; height: 768px;
         background: transparent;
         InstrumentFace { cx: 954; cy: 332; radius: 260; }
-        InstrumentArc { cx: 954; cy: 332; radius: 173; stroke: #253140; stroke-width: 1px; }
-        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 135; sweep: 135; stroke: #7fa7c9; stroke-width: 3px; }
-        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 270; sweep: 135; stroke: #adb9c7; stroke-width: 2px; }
+        InstrumentArc { cx: 954; cy: 332; radius: 173; stroke: Palette.track; stroke-width: 1px; }
+        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 135; sweep: 135; stroke: Palette.regen; stroke-width: 3px; }
+        InstrumentArc { cx: 954; cy: 332; radius: 252; start: 270; sweep: 135; stroke: Palette.label; stroke-width: 2px; }
         for value in [-3, -2, -1, 0, 2, 4, 6] : InstrumentTick {
             cx: 954; cy: 332; radius: 246;
             angle: 270 + (value < 0 ? 45 * value : 22.5 * value);
-            tick-length: 23; stroke: value < 0 ? #7fa7c9 : #dce4ed;
+            tick-length: 23; stroke: value < 0 ? Palette.regen : Palette.scale;
         }
         for value in [-2.5, -1.5, -0.5, 1, 3, 5] : InstrumentTick {
             cx: 954; cy: 332; radius: 246;
             angle: 270 + (value < 0 ? 45 * value : 22.5 * value);
-            tick-length: 11; stroke: value < 0 ? #7fa7c9 : #a1afbf; stroke-width: 2px;
+            tick-length: 11; stroke: value < 0 ? Palette.regen : Palette.minor; stroke-width: 2px;
         }
         for value in [-3, -2, -1, 0, 2, 4, 6] : Text {
             x: 954px + 202px * Math.cos((270 + (value < 0 ? 45 * value : 22.5 * value)) * 1deg) - 38px;
             y: 332px + 202px * Math.sin((270 + (value < 0 ? 45 * value : 22.5 * value)) * 1deg) - 25px;
             width: 76px; height: 50px;
             horizontal-alignment: center; vertical-alignment: center;
-            text: value; color: value < 0 ? #7fa7c9 : #ffffff;
+            text: value; color: value < 0 ? Palette.regen : Palette.ink;
             font-size: 34px; font-weight: 700;
         }
         InstrumentNeedle {
@@ -151,23 +154,23 @@ export component Dash inherits Window {
     if root.opt-power-bar : Rectangle {
         x: 0px; y: 0px; width: 1280px; height: 768px;
         background: transparent;
-        Rectangle { x: 690px; y: 282px; width: 520px; height: 22px; background: #253140; }
-        Rectangle { x: 690px; y: 282px; width: 520px / 3; height: 22px; background: #7fa7c9; opacity: 0.25; }
+        Rectangle { x: 690px; y: 282px; width: 520px; height: 22px; background: Palette.track; }
+        Rectangle { x: 690px; y: 282px; width: 520px / 3; height: 22px; background: Palette.regen; opacity: 0.25; }
         Rectangle {
             x: 690px + (3 + min(0, root.power-clamped)) * 520px / 9;
             y: 282px; width: abs(root.power-clamped) * 520px / 9; height: 22px;
             visible: root.power-known;
-            background: root.power-kw < 0 ? #7fa7c9 : #dce4ed;
+            background: root.power-kw < 0 ? Palette.regen : Palette.scale;
         }
         for value in [-3, 0, 3, 6] : Rectangle {
             x: 690px + (value + 3) * 520px / 9 - 1px;
-            y: 274px; width: 2px; height: 38px; background: #adb9c7;
+            y: 274px; width: 2px; height: 38px; background: Palette.label;
         }
         for value in [-3, 0, 3, 6] : Text {
             x: 690px + (value + 3) * 520px / 9 - 28px;
             y: 326px; width: 56px; height: 40px;
             horizontal-alignment: center; vertical-alignment: center;
-            text: value; color: value < 0 ? #7fa7c9 : #ffffff; font-size: 28px; font-weight: 700;
+            text: value; color: value < 0 ? Palette.regen : Palette.ink; font-size: 28px; font-weight: 700;
         }
         InstrumentNeedle {
             cx: 690 + (root.power-clamped + 3) * 520 / 9; cy: 293;
@@ -179,13 +182,13 @@ export component Dash inherits Window {
     Text {
         x: 814px; y: 384px; width: 280px; height: 110px;
         horizontal-alignment: center; vertical-alignment: center;
-        text: root.power-text; color: root.power-known && root.power-kw < 0 ? #7fa7c9 : #ffffff;
+        text: root.power-text; color: root.power-known && root.power-kw < 0 ? Palette.regen : Palette.ink;
         font-size: 82px; font-weight: 700; letter-spacing: -2px;
     }
     Text {
         x: 874px; y: 493px; width: 160px; height: 40px;
         horizontal-alignment: center; vertical-alignment: center;
-        text: "kW"; color: #adb9c7; font-size: 28px;
+        text: "kW"; color: Palette.label; font-size: 28px;
     }
 
     // Solid small faces overlap the large rims, as on the approved instrument board.
@@ -201,40 +204,40 @@ export component Dash inherits Window {
     }
 
     // One flat telemetry line. Copper never carries mode or status meaning.
-    Rectangle { x: 32px; y: 694px; width: 1216px; height: 1px; background: #344353; }
+    Rectangle { x: 32px; y: 694px; width: 1216px; height: 1px; background: Palette.rim; }
     for divider in [296, 666, 1038] : Rectangle {
-        x: divider * 1px; y: 711px; width: 1px; height: 38px; background: #344353;
+        x: divider * 1px; y: 711px; width: 1px; height: 38px; background: Palette.rim;
     }
     Text {
         x: 42px; y: 705px; width: 238px; height: 52px;
         vertical-alignment: center;
-        text: root.mode-text; color: #ffffff; font-size: 32px; font-weight: 700;
+        text: root.mode-text; color: Palette.ink; font-size: 32px; font-weight: 700;
     }
     Text {
         x: 326px; y: 705px; width: 102px; height: 52px;
         vertical-alignment: center;
-        text: "RANGE"; color: #adb9c7; font-size: 24px;
+        text: "RANGE"; color: Palette.label; font-size: 24px;
     }
     Text {
         x: 434px; y: 705px; width: 212px; height: 52px;
         vertical-alignment: center;
         text: (Vehicle.range-km < 0 ? "--" : "" + Vehicle.range-km) + " km";
-        color: #ffffff; font-size: 32px; font-weight: 700;
+        color: Palette.ink; font-size: 32px; font-weight: 700;
     }
     Text {
         x: 696px; y: 705px; width: 84px; height: 52px;
         vertical-alignment: center;
-        text: "TRIP"; color: #adb9c7; font-size: 24px;
+        text: "TRIP"; color: Palette.label; font-size: 24px;
     }
     Text {
         x: 786px; y: 705px; width: 232px; height: 52px;
         vertical-alignment: center;
-        text: root.trip-text + " km"; color: #ffffff; font-size: 32px; font-weight: 700;
+        text: root.trip-text + " km"; color: Palette.ink; font-size: 32px; font-weight: 700;
     }
     Text {
         x: 1058px; y: 705px; width: 180px; height: 52px;
         horizontal-alignment: right; vertical-alignment: center;
         text: Vehicle.clock-text == "" ? "--" : Vehicle.clock-text;
-        color: #ffffff; font-size: 32px; font-weight: 700;
+        color: Palette.ink; font-size: 32px; font-weight: 700;
     }
 }
